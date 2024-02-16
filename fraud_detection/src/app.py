@@ -26,6 +26,12 @@ class HelloService(fraud_detection_grpc.HelloServiceServicer):
         print(response.greeting)
         # Return the response object
         return response
+    
+    def DetectFraud(self, request, context):
+        response = fraud_detection.FraudResponse()
+        response.decision = "r" in request.name
+        print(response.decision)
+        return response
 
 def serve():
     # Create a gRPC server

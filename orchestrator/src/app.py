@@ -21,6 +21,15 @@ def greet(name='you'):
         response = stub.SayHello(fraud_detection.HelloRequest(name=name))
     return response.greeting
 
+def detect_fraud(name='you'):
+    # Establish a connection with the fraud-detection gRPC service.
+    with grpc.insecure_channel('fraud_detection:50051') as channel:
+        # Create a stub object.
+        stub = fraud_detection_grpc.HelloServiceStub(channel)
+        # Call the service through the stub object.
+        response = stub.DetectFraud(fraud_detection.FraudRequest(name=name))
+    return response.decision
+
 # Import Flask.
 # Flask is a web framework for Python.
 # It allows you to build a web application quickly.
@@ -52,10 +61,13 @@ def checkout():
     # Print request object data
     print("Request Data:", request.json)
 
+    decision = detect_fraud(name=request.json["user"]["name"])
+    print(f"Decision was {decision}")
+
     # Dummy response following the provided YAML specification for the bookstore
     order_status_response = {
         'orderId': '12345',
-        'status': 'Order Approved',
+        'status': 'Order Approved' if decision else 'Fraud detected',
         'suggestedBooks': [
             {'bookId': '123', 'title': 'Dummy Book 1', 'author': 'Author 1'},
             {'bookId': '456', 'title': 'Dummy Book 2', 'author': 'Author 2'}
