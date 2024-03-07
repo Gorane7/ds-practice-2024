@@ -20,14 +20,14 @@ import suggestions_service_pb2_grpc as suggestions_service_grpc
 
 import grpc
 
-def greet(name='you'):
+"""def greet(name='you'):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         # Create a stub object.
         stub = fraud_detection_grpc.HelloServiceStub(channel)
         # Call the service through the stub object.
         response = stub.SayHello(fraud_detection.HelloRequest(name=name))
-    return response.greeting
+    return response.greeting"""
 
 def detect_fraud(name='you'):
     # Establish a connection with the fraud-detection gRPC service.
@@ -72,15 +72,15 @@ app = Flask(__name__)
 CORS(app)
 
 # Define a GET endpoint.
-@app.route('/', methods=['GET'])
-def index():
-    """
-    Responds with 'Hello, [name]' when a GET request is made to '/' endpoint.
-    """
-    # Test the fraud-detection gRPC service.
-    response = greet(name='orchestrator')
-    # Return the response.
-    return response
+#@app.route('/', methods=['GET'])
+#def index():
+#    """
+#    Responds with 'Hello, [name]' when a GET request is made to '/' endpoint.
+#    """
+#    # Test the fraud-detection gRPC service.
+#    response = greet(name='orchestrator')
+#    # Return the response.
+#    return response
 
 @app.route('/checkout', methods=['POST'])
 def checkout():
