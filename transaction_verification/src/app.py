@@ -35,13 +35,10 @@ class VerifService(transaction_verification_grpc.VerifServiceServicer):
         response.decision = True
         if len(request.items) == 0:
             response.decision = False
-            print(1)
         elif request.userInfo.name == "" or request.userInfo.contact == "":
             response.decision = False
-            print(2)
         elif request.creditInfo.number == "" or not request.creditInfo.number.isnumeric() or not re.match("^(0[0-9]|10|11|12)/[0-9][0-9]$", request.creditInfo.expirationDate) or len(request.creditInfo.cvv) <3 or len(request.creditInfo.cvv) > 4 or not request.creditInfo.cvv.isnumeric():
             response.decision = False
-            print(3)
         print(response.decision)
         return response
 

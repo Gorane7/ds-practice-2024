@@ -47,14 +47,17 @@ def verify_transaction(req={}):
         response = stub.Verify(transaction_verification.VerifyRequest(items=req['items'], userInfo=req['user'], creditInfo=req['creditCard']))
     return response.decision
     
-def suggest_service(name='you'):
+def suggest_service(pool=[]):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('suggestions_service:50053') as channel:
         # Create a stub object.
         stub = suggestions_service_grpc.SuggestionsServiceStub(channel)
         # Call the service through the stub object.
-        response = stub.Suggest(suggestions_service.SuggestionRequest(name=name))
-    return response.decision
+        response = stub.Suggest(suggestions_service.SuggestionRequest(books=pool))
+        res = []
+        for book in response.books:
+            res.append({"bookId":book.bookId, "title":book.title, "author":book.author})
+    return res
 
 # Import Flask.
 # Flask is a web framework for Python.
@@ -94,14 +97,16 @@ def checkout():
     trans_verif = verify_transaction(req=request.json)
     print(f"Transaction verification result: {trans_verif}")
 
+    suggestions = suggest_service(pool=[
+            {'bookId': '123', 'title': 'Dummy Book 1', 'author': 'Author 1'},
+            {'bookId': '456', 'title': 'Dummy Book 2', 'author': 'Author 2'}
+        ])
+
     # Dummy response following the provided YAML specification for the bookstore
     order_status_response = {
         'orderId': '12345',
         'status': 'Order Approved' if decision else 'Fraud detected' if trans_verif else "Incorrect transaction details (credit card number, name etc)",
-        'suggestedBooks': [
-            {'bookId': '123', 'title': 'Dummy Book 1', 'author': 'Author 1'},
-            {'bookId': '456', 'title': 'Dummy Book 2', 'author': 'Author 2'}
-        ]
+        'suggestedBooks': suggestions
     }
 
     return order_status_response

@@ -1,5 +1,6 @@
 import sys
 import os
+import random
 
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
@@ -17,21 +18,15 @@ from concurrent import futures
 # suggestions_service_pb2_grpc.HelloServiceServicer
 class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
     # Create an RPC function to say hello
-    '''
-    def SayHello(self, request, context):
-        # Create a HelloResponse object
-        response = suggestions_service.HelloResponse()
-        # Set the greeting field of the response object
-        response.greeting = "Hello, " + request.name
-        # Print the greeting message
-        print(response.greeting)
-        # Return the response object
-        return response
-    '''
     def Suggest(self, request, context):
         response = suggestions_service.SuggestionResponse()
-        response.decision = "r" in request.name
-        print(response.decision)
+        if len(request.books) == 0:
+            response = suggestions_service.SuggestionResponse(books = [])
+        else:
+            book = random.choice(request.books)
+            response = suggestions_service.SuggestionResponse(books = [book])
+        print(response.books)
+        print(response.books[0].__dir__())
         return response
 
 def serve():
