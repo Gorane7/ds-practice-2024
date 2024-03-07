@@ -6,8 +6,24 @@ service VerifService {
     rpc Verify (VerifyRequest) returns (VerifyResponse);
 }
 
-message VerifyRequest {
+message Item { 
     string name = 1;
+    int32 quantity = 2;
+}
+message UserInfo {
+    string name = 1;
+    string contact = 2;
+}
+message CreditInfo {
+    string number = 1;
+    string expirationDate = 2;
+    string cvv = 3;
+}
+
+message VerifyRequest {
+    repeated Item items = 1;
+    UserInfo userInfo = 2;
+    CreditInfo creditInfo = 3;
 }
 
 message VerifyResponse {

@@ -38,22 +38,22 @@ def detect_fraud(name='you'):
         response = stub.DetectFraud(fraud_detection.FraudRequest(name=name)) 
     return response.decision
     
-def transaction_verification(name='you'):
+def verify_transaction(req={}):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('transaction_verification:50052') as channel:
         # Create a stub object.
         stub = transaction_verification_grpc.VerifServiceStub(channel)
         # Call the service through the stub object.
-        response = stub.Verify(transaction_verification.VerifyRequest(name=name))
+        response = stub.Verify(transaction_verification.VerifyRequest(items=req['items'], userInfo=req['user'], creditInfo=req['creditCard']))
     return response.decision
     
-def suggestions_service(name='you'):
+def suggest_service(name='you'):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('suggestions_service:50053') as channel:
         # Create a stub object.
         stub = suggestions_service_grpc.SuggestionsServiceStub(channel)
         # Call the service through the stub object.
-        response = stub.Verify(suggestions_service.SuggestionRequest(name=name))
+        response = stub.Suggest(suggestions_service.SuggestionRequest(name=name))
     return response.decision
 
 # Import Flask.
@@ -90,13 +90,14 @@ def checkout():
     decision = detect_fraud(name=request.json["user"]["name"])
     print(f"Decision was {decision}")
 
-    trans_verif = transaction_verification(name=request.json)
+    print(request.json)
+    trans_verif = verify_transaction(req=request.json)
     print(f"Transaction verification result: {trans_verif}")
 
     # Dummy response following the provided YAML specification for the bookstore
     order_status_response = {
         'orderId': '12345',
-        'status': 'Order Approved' if decision else 'Fraud detected' if trans_verif else "Transaction not verified",
+        'status': 'Order Approved' if decision else 'Fraud detected' if trans_verif else "Incorrect transaction details (credit card number, name etc)",
         'suggestedBooks': [
             {'bookId': '123', 'title': 'Dummy Book 1', 'author': 'Author 1'},
             {'bookId': '456', 'title': 'Dummy Book 2', 'author': 'Author 2'}

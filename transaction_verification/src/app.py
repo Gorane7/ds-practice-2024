@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
@@ -31,7 +32,16 @@ class VerifService(transaction_verification_grpc.VerifServiceServicer):
     
     def Verify(self, request, context):
         response = transaction_verification.VerifyResponse()
-        response.decision = "r" in request.name
+        response.decision = True
+        if len(request.items) == 0:
+            response.decision = False
+            print(1)
+        elif request.userInfo.name == "" or request.userInfo.contact == "":
+            response.decision = False
+            print(2)
+        elif request.creditInfo.number == "" or not request.creditInfo.number.isnumeric() or not re.match("^(0[0-9]|10|11|12)/[0-9][0-9]$", request.creditInfo.expirationDate) or len(request.creditInfo.cvv) <3 or len(request.creditInfo.cvv) > 4 or not request.creditInfo.cvv.isnumeric():
+            response.decision = False
+            print(3)
         print(response.decision)
         return response
 

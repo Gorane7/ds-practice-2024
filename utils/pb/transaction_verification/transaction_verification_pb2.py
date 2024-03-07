@@ -14,17 +14,23 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\x05hello\"\x1d\n\rVerifyRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"\"\n\x0eVerifyResponse\x12\x10\n\x08\x64\x65\x63ision\x18\x01 \x01(\x08\x32\x45\n\x0cVerifService\x12\x35\n\x06Verify\x12\x14.hello.VerifyRequest\x1a\x15.hello.VerifyResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1etransaction_verification.proto\x12\x05hello\"&\n\x04Item\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\")\n\x08UserInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontact\x18\x02 \x01(\t\"A\n\nCreditInfo\x12\x0e\n\x06number\x18\x01 \x01(\t\x12\x16\n\x0e\x65xpirationDate\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t\"u\n\rVerifyRequest\x12\x1a\n\x05items\x18\x01 \x03(\x0b\x32\x0b.hello.Item\x12!\n\x08userInfo\x18\x02 \x01(\x0b\x32\x0f.hello.UserInfo\x12%\n\ncreditInfo\x18\x03 \x01(\x0b\x32\x11.hello.CreditInfo\"\"\n\x0eVerifyResponse\x12\x10\n\x08\x64\x65\x63ision\x18\x01 \x01(\x08\x32\x45\n\x0cVerifService\x12\x35\n\x06Verify\x12\x14.hello.VerifyRequest\x1a\x15.hello.VerifyResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'transaction_verification_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_VERIFYREQUEST']._serialized_start=41
-  _globals['_VERIFYREQUEST']._serialized_end=70
-  _globals['_VERIFYRESPONSE']._serialized_start=72
-  _globals['_VERIFYRESPONSE']._serialized_end=106
-  _globals['_VERIFSERVICE']._serialized_start=108
-  _globals['_VERIFSERVICE']._serialized_end=177
+  _globals['_ITEM']._serialized_start=41
+  _globals['_ITEM']._serialized_end=79
+  _globals['_USERINFO']._serialized_start=81
+  _globals['_USERINFO']._serialized_end=122
+  _globals['_CREDITINFO']._serialized_start=124
+  _globals['_CREDITINFO']._serialized_end=189
+  _globals['_VERIFYREQUEST']._serialized_start=191
+  _globals['_VERIFYREQUEST']._serialized_end=308
+  _globals['_VERIFYRESPONSE']._serialized_start=310
+  _globals['_VERIFYRESPONSE']._serialized_end=344
+  _globals['_VERIFSERVICE']._serialized_start=346
+  _globals['_VERIFSERVICE']._serialized_end=415
 # @@protoc_insertion_point(module_scope)

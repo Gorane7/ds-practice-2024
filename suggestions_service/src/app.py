@@ -28,7 +28,7 @@ class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
         # Return the response object
         return response
     '''
-    def DetectFraud(self, request, context):
+    def Suggest(self, request, context):
         response = suggestions_service.SuggestionResponse()
         response.decision = "r" in request.name
         print(response.decision)
