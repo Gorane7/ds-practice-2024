@@ -44,5 +44,5 @@ class VerifyRequest(_message.Message):
 class VerifyResponse(_message.Message):
     __slots__ = ("decision",)
     DECISION_FIELD_NUMBER: _ClassVar[int]
-    decision: bool
-    def __init__(self, decision: bool = ...) -> None: ...
+    decision: int
+    def __init__(self, decision: _Optional[int] = ...) -> None: ...

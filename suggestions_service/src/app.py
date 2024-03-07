@@ -1,6 +1,7 @@
 import sys
 import os
 import random
+import time
 
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
@@ -19,14 +20,16 @@ from concurrent import futures
 class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
     # Create an RPC function to say hello
     def Suggest(self, request, context):
+        start = time.time()
         response = suggestions_service.SuggestionResponse()
         if len(request.books) == 0:
             response = suggestions_service.SuggestionResponse(books = [])
         else:
             book = random.choice(request.books)
             response = suggestions_service.SuggestionResponse(books = [book])
-        print(response.books)
-        print(response.books[0].__dir__())
+        print(f"Pool of books to choose from: {[i.title for i in response.books]}")
+        print(f"Book chosen to suggest: {book.title}")
+        print(f"Time taken to choose book: {round(time.time()-start,4)}")
         return response
 
 def serve():

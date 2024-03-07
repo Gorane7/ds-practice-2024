@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
@@ -28,9 +29,12 @@ class HelloService(fraud_detection_grpc.HelloServiceServicer):
         return response
     
     def DetectFraud(self, request, context):
+        start = time.time()
         response = fraud_detection.FraudResponse()
-        response.decision = "r" in request.name
-        print(response.decision)
+        response.decision = "thief" in request.name
+        if response.decision:
+            print(f"Found fraudulent behaviour")
+        print(f"Time taken to detect fraudulent behaviour: {round(time.time()-start, 4)}")
         return response
 
 def serve():

@@ -27,5 +27,5 @@ message VerifyRequest {
 }
 
 message VerifyResponse {
-    bool decision = 1;
+    int32 decision = 1;
 }
