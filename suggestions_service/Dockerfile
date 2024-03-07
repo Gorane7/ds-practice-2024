@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install reloadium
 
 # Set the command to run the application
-CMD reloadium run "fraud_detection/src/app.py"
+CMD reloadium run "suggestions_service/src/app.py"

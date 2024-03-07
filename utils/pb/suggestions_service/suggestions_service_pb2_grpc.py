@@ -2,10 +2,10 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import transaction_verification_pb2 as transaction__verification__pb2
+import suggestions_service_pb2 as suggestions__service__pb2
 
 
-class VerifServiceStub(object):
+class SuggestionsServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -14,42 +14,42 @@ class VerifServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Verify = channel.unary_unary(
-                '/hello.VerifService/Verify',
-                request_serializer=transaction__verification__pb2.VerifyRequest.SerializeToString,
-                response_deserializer=transaction__verification__pb2.VerifyResponse.FromString,
+        self.Suggest = channel.unary_unary(
+                '/hello.SuggestionsService/Suggest',
+                request_serializer=suggestions__service__pb2.SuggestionRequest.SerializeToString,
+                response_deserializer=suggestions__service__pb2.SuggestionResponse.FromString,
                 )
 
 
-class VerifServiceServicer(object):
+class SuggestionsServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def Verify(self, request, context):
+    def Suggest(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_VerifServiceServicer_to_server(servicer, server):
+def add_SuggestionsServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Verify': grpc.unary_unary_rpc_method_handler(
-                    servicer.Verify,
-                    request_deserializer=transaction__verification__pb2.VerifyRequest.FromString,
-                    response_serializer=transaction__verification__pb2.VerifyResponse.SerializeToString,
+            'Suggest': grpc.unary_unary_rpc_method_handler(
+                    servicer.Suggest,
+                    request_deserializer=suggestions__service__pb2.SuggestionRequest.FromString,
+                    response_serializer=suggestions__service__pb2.SuggestionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'hello.VerifService', rpc_method_handlers)
+            'hello.SuggestionsService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class VerifService(object):
+class SuggestionsService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def Verify(request,
+    def Suggest(request,
             target,
             options=(),
             channel_credentials=None,
@@ -59,8 +59,8 @@ class VerifService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/hello.VerifService/Verify',
-            transaction__verification__pb2.VerifyRequest.SerializeToString,
-            transaction__verification__pb2.VerifyResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/hello.SuggestionsService/Suggest',
+            suggestions__service__pb2.SuggestionRequest.SerializeToString,
+            suggestions__service__pb2.SuggestionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

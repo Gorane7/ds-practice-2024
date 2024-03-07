@@ -4,13 +4,13 @@ from typing import ClassVar as _ClassVar, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class VerifyRequest(_message.Message):
+class SuggestionRequest(_message.Message):
     __slots__ = ("name",)
     NAME_FIELD_NUMBER: _ClassVar[int]
     name: str
     def __init__(self, name: _Optional[str] = ...) -> None: ...
 
-class VerifyResponse(_message.Message):
+class SuggestionResponse(_message.Message):
     __slots__ = ("decision",)
     DECISION_FIELD_NUMBER: _ClassVar[int]
     decision: bool
