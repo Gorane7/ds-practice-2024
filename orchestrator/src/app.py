@@ -1,5 +1,7 @@
 import sys
 import os
+import threading
+import time
 
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
@@ -29,25 +31,25 @@ def greet(name='you'):
         response = stub.SayHello(fraud_detection.HelloRequest(name=name))
     return response.greeting
 
-def detect_fraud(name='you'):
+def detect_fraud(name='you', resp={}):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         # Create a stub object.
         stub = fraud_detection_grpc.HelloServiceStub(channel)
         # Call the service through the stub object.
         response = stub.DetectFraud(fraud_detection.FraudRequest(name=name)) 
-    return response.decision
+    resp["fraud"] = response.decision
     
-def verify_transaction(req={}):
+def verify_transaction(req={}, resp={}):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('transaction_verification:50052') as channel:
         # Create a stub object.
         stub = transaction_verification_grpc.VerifServiceStub(channel)
         # Call the service through the stub object.
         response = stub.Verify(transaction_verification.VerifyRequest(items=req['items'], userInfo=req['user'], creditInfo=req['creditCard']))
-    return response.decision
+    resp["verif"] = response.decision
     
-def suggest_service(pool=[], ordered_books=[]):
+def suggest_service(pool=[], ordered_books=[], resp={}):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('suggestions_service:50053') as channel:
         # Create a stub object.
@@ -57,7 +59,7 @@ def suggest_service(pool=[], ordered_books=[]):
         res = []
         for book in response.books:
             res.append({"bookId":book.bookId, "title":book.title, "author":book.author})
-    return res
+    resp["suggestions"] = res
 
 # Import Flask.
 # Flask is a web framework for Python.
@@ -90,23 +92,28 @@ def checkout():
     # Print request object data
     print("Request Data:", request.json)
 
-    decision = detect_fraud(name=request.json["user"]["name"])
-    print(f"Decision was {decision}")
-
-    trans_verif = verify_transaction(req=request.json)
-    print(f"Transaction verification result: {trans_verif}")
-
-    book_names = [x["name"] for x in request.json["items"]]
-
-    suggestions = suggest_service(
-        pool=[
+    pool=[
             {'bookId': '1', 'title': 'Learning Python', 'author': 'John Smith'},
             {'bookId': '2', 'title': 'JavaScript - The Good Parts', 'author': 'Jane Doe'},
             {'bookId': '3', 'title': 'Domain-Driven Design: Tackling Complexity in the Heart of Software', 'author': 'Eric Evans'},
             {'bookId': '4', 'title': 'Design Patterns: Elements of Reusable Object-Oriented Software', 'author': 'Erich Gamma, Richard Helm, Ralph Johnson, & John Vlissides'}
-        ],
-        ordered_books=book_names
-    )
+        ]
+    book_names = [x["name"] for x in request.json["items"]]
+
+    responses = {}
+    fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "resp": responses})
+    verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses})
+    suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses})
+    fraud_thread.start()
+    verif_thread.start()
+    suggestion_thread.start()
+    fraud_thread.join()
+    verif_thread.join()
+    suggestion_thread.join()
+
+    decision = responses["fraud"]
+    trans_verif = responses["verif"]
+    suggestions = responses["suggestions"]
 
     # Dummy response following the provided YAML specification for the bookstore
     order_status_response = {
