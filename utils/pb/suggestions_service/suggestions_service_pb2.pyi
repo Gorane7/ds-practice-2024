@@ -16,10 +16,12 @@ class Book(_message.Message):
     def __init__(self, bookId: _Optional[str] = ..., title: _Optional[str] = ..., author: _Optional[str] = ...) -> None: ...
 
 class SuggestionRequest(_message.Message):
-    __slots__ = ("books",)
+    __slots__ = ("books", "ordered")
     BOOKS_FIELD_NUMBER: _ClassVar[int]
+    ORDERED_FIELD_NUMBER: _ClassVar[int]
     books: _containers.RepeatedCompositeFieldContainer[Book]
-    def __init__(self, books: _Optional[_Iterable[_Union[Book, _Mapping]]] = ...) -> None: ...
+    ordered: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, books: _Optional[_Iterable[_Union[Book, _Mapping]]] = ..., ordered: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class SuggestionResponse(_message.Message):
     __slots__ = ("books",)

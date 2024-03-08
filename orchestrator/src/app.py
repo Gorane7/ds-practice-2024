@@ -47,13 +47,13 @@ def verify_transaction(req={}):
         response = stub.Verify(transaction_verification.VerifyRequest(items=req['items'], userInfo=req['user'], creditInfo=req['creditCard']))
     return response.decision
     
-def suggest_service(pool=[]):
+def suggest_service(pool=[], ordered_books=[]):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('suggestions_service:50053') as channel:
         # Create a stub object.
         stub = suggestions_service_grpc.SuggestionsServiceStub(channel)
         # Call the service through the stub object.
-        response = stub.Suggest(suggestions_service.SuggestionRequest(books=pool))
+        response = stub.Suggest(suggestions_service.SuggestionRequest(books=pool, ordered=ordered_books))
         res = []
         for book in response.books:
             res.append({"bookId":book.bookId, "title":book.title, "author":book.author})
@@ -93,14 +93,20 @@ def checkout():
     decision = detect_fraud(name=request.json["user"]["name"])
     print(f"Decision was {decision}")
 
-    print(request.json)
     trans_verif = verify_transaction(req=request.json)
     print(f"Transaction verification result: {trans_verif}")
 
-    suggestions = suggest_service(pool=[
-            {'bookId': '123', 'title': 'Dummy Book 1', 'author': 'Author 1'},
-            {'bookId': '456', 'title': 'Dummy Book 2', 'author': 'Author 2'}
-        ])
+    book_names = [x["name"] for x in request.json["items"]]
+
+    suggestions = suggest_service(
+        pool=[
+            {'bookId': '1', 'title': 'Learning Python', 'author': 'John Smith'},
+            {'bookId': '2', 'title': 'JavaScript - The Good Parts', 'author': 'Jane Doe'},
+            {'bookId': '3', 'title': 'Domain-Driven Design: Tackling Complexity in the Heart of Software', 'author': 'Eric Evans'},
+            {'bookId': '4', 'title': 'Design Patterns: Elements of Reusable Object-Oriented Software', 'author': 'Erich Gamma, Richard Helm, Ralph Johnson, & John Vlissides'}
+        ],
+        ordered_books=book_names
+    )
 
     # Dummy response following the provided YAML specification for the bookstore
     order_status_response = {

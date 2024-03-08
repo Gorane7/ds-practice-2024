@@ -14,6 +14,7 @@ message Book {
 
 message SuggestionRequest {
     repeated Book books = 1;
+    repeated string ordered = 2;
 }
 
 message SuggestionResponse {
