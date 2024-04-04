@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package hello;
+
+service OrderQueue {
+    rpc Enqueue (EnqueueRequest) returns (EnqueueResponse);
+    rpc Dequeue (DequeueRequest) returns (DequeueResponse);
+}
+
+message EnqueueRequest {
+    repeated string booknames = 1;
+}
+
+message EnqueueResponse {
+    bool success = 1;
+}
+
+message DequeueRequest {}
+
+message DequeueResponse {
+    repeated string booknames = 1;
+    bool have_order = 2;
+}

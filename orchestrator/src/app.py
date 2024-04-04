@@ -7,18 +7,30 @@ import time
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
+
 utils_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 sys.path.insert(0, utils_path)
+
 utils_path2 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
 sys.path.insert(0, utils_path2)
+
 utils_path3 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions_service'))
 sys.path.insert(0, utils_path3)
+
+utils_path4 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_queue'))
+sys.path.insert(0, utils_path4)
+
 import fraud_detection_pb2 as fraud_detection
 import fraud_detection_pb2_grpc as fraud_detection_grpc
+
 import transaction_verification_pb2 as transaction_verification
 import transaction_verification_pb2_grpc as transaction_verification_grpc
+
 import suggestions_service_pb2 as suggestions_service
 import suggestions_service_pb2_grpc as suggestions_service_grpc
+
+import order_queue_pb2 as order_queue
+import order_queue_pb2_grpc as order_queue_grpc
 
 import grpc
 
@@ -60,6 +72,15 @@ def suggest_service(pool=[], ordered_books=[], resp={}):
         for book in response.books:
             res.append({"bookId":book.bookId, "title":book.title, "author":book.author})
     resp["suggestions"] = res
+
+def enqueue_order(books=[], resp={}):
+    # Establish a connection with the order-queue gRPC service.
+    with grpc.insecure_channel('order_queue:50054') as channel:
+        # Create a stub object.
+        stub = order_queue_grpc.OrderQueueStub(channel)
+        # Call the service through the stub object.
+        response = stub.Enqueue(order_queue.EnqueueRequest(booknames=books))
+    resp["enqueue"] = response.success
 
 # Import Flask.
 # Flask is a web framework for Python.
@@ -114,6 +135,14 @@ def checkout():
     decision = responses["fraud"]
     trans_verif = responses["verif"]
     suggestions = responses["suggestions"]
+
+    print(f"Fraud decision: {decision}")
+    print(f"Transaction verification: {trans_verif}")
+
+    if not decision and not trans_verif:
+        enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})
+        enqueue_thread.start()
+        enqueue_thread.join()
 
     # Dummy response following the provided YAML specification for the bookstore
     order_status_response = {
