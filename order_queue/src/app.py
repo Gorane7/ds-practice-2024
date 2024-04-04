@@ -25,9 +25,10 @@ class OrderQueue(order_queue_grpc.OrderQueueServicer):
         self.queue = []
     
     def Enqueue(self, request, context):
-        self.queue.append(request.booknames)
+        self.queue.append((request.priority, request.booknames))
+        self.queue.sort()
         response = order_queue.EnqueueResponse(success=True)
-        print(f"Order {request.booknames} was enqueued successfully")
+        print(f"Order {request.booknames} was enqueued with priority {request.priority} successfully")
         return response
 
     def Dequeue(self, request, context):
@@ -35,8 +36,9 @@ class OrderQueue(order_queue_grpc.OrderQueueServicer):
             response = order_queue.DequeueResponse(booknames=[], have_order=False)
             print(f"Did not have any orders queued")
             return response
-        response = order_queue.DequeueResponse(booknames=self.queue.pop(), have_order=True)
-        print(f"Order {response.booknames} was successfully dequeued")
+        priority, booknames = self.queue.pop()
+        response = order_queue.DequeueResponse(booknames=booknames, have_order=True)
+        print(f"Order {response.booknames} was successfully dequeued with priority {priority}")
         return response
 
 def serve():

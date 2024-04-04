@@ -2,6 +2,7 @@ import sys
 import os
 import threading
 import time
+import random
 
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
@@ -73,13 +74,13 @@ def suggest_service(pool=[], ordered_books=[], resp={}):
             res.append({"bookId":book.bookId, "title":book.title, "author":book.author})
     resp["suggestions"] = res
 
-def enqueue_order(books=[], resp={}):
+def enqueue_order(books=[], priority=0, resp={}):
     # Establish a connection with the order-queue gRPC service.
     with grpc.insecure_channel('order_queue:50054') as channel:
         # Create a stub object.
         stub = order_queue_grpc.OrderQueueStub(channel)
         # Call the service through the stub object.
-        response = stub.Enqueue(order_queue.EnqueueRequest(booknames=books))
+        response = stub.Enqueue(order_queue.EnqueueRequest(booknames=books, priority=priority))
     resp["enqueue"] = response.success
 
 # Import Flask.
@@ -124,7 +125,7 @@ def checkout():
     responses = {}
     fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "resp": responses})
     verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses})
-    suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses})
+    suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books": book_names, "resp": responses})
     fraud_thread.start()
     verif_thread.start()
     suggestion_thread.start()
@@ -140,7 +141,8 @@ def checkout():
     print(f"Transaction verification: {trans_verif}")
 
     if not decision and not trans_verif:
-        enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})
+        # Deciding priority is currently with dummy logic, this can later be replaced with whatever decision process that generates a 32-bit integer
+        enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "priority": random.randint(0, 10), "resp": responses})
         enqueue_thread.start()
         enqueue_thread.join()
 

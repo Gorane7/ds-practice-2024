@@ -6,10 +6,12 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Op
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class EnqueueRequest(_message.Message):
-    __slots__ = ("booknames",)
+    __slots__ = ("booknames", "priority")
     BOOKNAMES_FIELD_NUMBER: _ClassVar[int]
+    PRIORITY_FIELD_NUMBER: _ClassVar[int]
     booknames: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, booknames: _Optional[_Iterable[str]] = ...) -> None: ...
+    priority: int
+    def __init__(self, booknames: _Optional[_Iterable[str]] = ..., priority: _Optional[int] = ...) -> None: ...
 
 class EnqueueResponse(_message.Message):
     __slots__ = ("success",)
