@@ -3,6 +3,8 @@ import os
 import random
 import time
 
+import queue
+
 
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
@@ -22,24 +24,24 @@ from concurrent import futures
 class OrderQueue(order_queue_grpc.OrderQueueServicer):
 
     def __init__(self):
-        self.queue = []
+        self.queue = queue.PriorityQueue()
     
     def Enqueue(self, request, context):
-        self.queue.append((request.priority, request.booknames))
-        self.queue.sort()
+        self.queue.put((request.priority, request.booknames))
         response = order_queue.EnqueueResponse(success=True)
         print(f"Order {request.booknames} was enqueued with priority {request.priority} successfully")
         return response
 
     def Dequeue(self, request, context):
-        if not self.queue:
+        try:
+            priority, booknames = self.queue.get(block=False)
+            response = order_queue.DequeueResponse(booknames=booknames, have_order=True)
+            print(f"Order {response.booknames} was successfully dequeued with priority {priority}")
+            return response
+        except:
             response = order_queue.DequeueResponse(booknames=[], have_order=False)
             print(f"Did not have any orders queued")
             return response
-        priority, booknames = self.queue.pop()
-        response = order_queue.DequeueResponse(booknames=booknames, have_order=True)
-        print(f"Order {response.booknames} was successfully dequeued with priority {priority}")
-        return response
 
 def serve():
     # Create a gRPC server
