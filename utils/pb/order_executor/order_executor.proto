@@ -3,4 +3,9 @@ syntax = "proto3";
 package hello;
 
 service OrderExecutor {
+    rpc Token (TokenRequest) returns (TokenResponse);
 }
+
+message TokenRequest {}
+
+message TokenResponse {}

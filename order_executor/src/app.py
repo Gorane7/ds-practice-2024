@@ -34,6 +34,9 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
         self.stub = order_queue_grpc.OrderQueueStub(self.channel)
 
         self.id = int(os.environ['CONTAINER_ID'])
+        self.process_amount = int(os.environ['PROCESS_AMOUNT'])
+        self.token = self.id == 0
+        self.busy = False
         
         # Start a thread to periodically send requests to OrderQueue service
         self.periodic_request_thread = threading.Thread(target=self.send_periodic_request)
@@ -42,18 +45,46 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
     
     def send_periodic_request(self):
         while True:
-            # Define your request here
-            request = order_queue.DequeueRequest()
-            
-            # Send request to OrderQueue service
-            response = self.stub.Dequeue(request)
-            if response.have_order:
-                print(f"Executing order {response.booknames}")
-            else:
-                print(f"Did not have order to execute")
+            time.sleep(1)
+            if self.token:
+                if not self.busy:
+                    print("Asking for orders")
+                    request = order_queue.DequeueRequest()
+                    response = self.stub.Dequeue(request)
+                    if response.have_order:
+                        print("Got orders")
+                        threading.Thread(target=self.process_request, args=(response.booknames, )).start()
+                    else:
+                        print(f"Did not have order to execute")
+                self.send_token((self.id + 1) % self.process_amount)
+    
+    def process_request(self, booknames):
+        self.busy = True
+        print(f"Starting processing of {booknames}")
+        time.sleep(random.random() * 10 + 10)
+        print(f"Finished processing of {booknames}")
+        self.busy = False
+    
+    def send_token(self, remote_id):
+        self.token = False
+        print(f"Sending away token to {remote_id}")
+        try:
+            with grpc.insecure_channel(f"order_executor_{remote_id}:{50100 + remote_id}") as channel:
+                stub = order_executor_grpc.OrderExecutorStub(channel)
+                request = order_executor.TokenRequest()
+                response = stub.Token(request)
+        except Exception as e:
+            print("Got error: " + str(e))
+            print("Failed to send away token, taking it back")
+            self.token = True
+    
+    def Token(self, request, context):
+        print("Received token")
+        self.token = True
+        response = order_executor.TokenResponse()
+        return response
 
-            # Sleep for some time before sending the next request
-            time.sleep(10)  # Sleep for 10 seconds, adjust as needed
+
 
 def serve():
     print("Starting doing nothing")

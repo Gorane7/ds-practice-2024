@@ -14,13 +14,17 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14order_executor.proto\x12\x05hello2\x0f\n\rOrderExecutorb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14order_executor.proto\x12\x05hello\"\x0e\n\x0cTokenRequest\"\x0f\n\rTokenResponse2C\n\rOrderExecutor\x12\x32\n\x05Token\x12\x13.hello.TokenRequest\x1a\x14.hello.TokenResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'order_executor_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_ORDEREXECUTOR']._serialized_start=31
-  _globals['_ORDEREXECUTOR']._serialized_end=46
+  _globals['_TOKENREQUEST']._serialized_start=31
+  _globals['_TOKENREQUEST']._serialized_end=45
+  _globals['_TOKENRESPONSE']._serialized_start=47
+  _globals['_TOKENRESPONSE']._serialized_end=62
+  _globals['_ORDEREXECUTOR']._serialized_start=64
+  _globals['_ORDEREXECUTOR']._serialized_end=131
 # @@protoc_insertion_point(module_scope)

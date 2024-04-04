@@ -126,6 +126,30 @@ services:
       - ./utils:/app/utils
       # Mount the order_queue/src directory in the current directory to the /app/order_queue/src directory in the container
       - ./order_queue/src:/app/order_queue/src
+  order_executor_0:
+    build:
+      # Use the current directory as the build context
+      # This allows us to access the files in the current directory inside the Dockerfile
+      context: ./
+      # Use the Dockerfile in the order_executor directorys
+      dockerfile: ./order_executor/Dockerfile
+    ports:
+      # Expose port 50100 on the host, and map port 50100 of the container to port 50100 on the host
+      - 50100:50100
+    environment:
+      # Pass the environment variables to the container
+      # The PYTHONUNBUFFERED environment variable ensures that the output from the application is logged to the console
+      - PYTHONUNBUFFERED=TRUE
+      # The PYTHONFILE environment variable specifies the absolute entry point of the application
+      # Check app.py in the order_executor directory to see how this is used
+      - PYTHONFILE=/app/order_executor/src/app.py
+      - CONTAINER_ID=0
+      - PROCESS_AMOUNT=2
+    volumes:
+      # Mount the utils directory in the current directory to the /app/utils directory in the container
+      - ./utils:/app/utils
+      # Mount the order_queue/src directory in the current directory to the /app/order_executor/src directory in the container
+      - ./order_executor/src:/app/order_executor/src
   order_executor_1:
     build:
       # Use the current directory as the build context
@@ -144,29 +168,7 @@ services:
       # Check app.py in the order_executor directory to see how this is used
       - PYTHONFILE=/app/order_executor/src/app.py
       - CONTAINER_ID=1
-    volumes:
-      # Mount the utils directory in the current directory to the /app/utils directory in the container
-      - ./utils:/app/utils
-      # Mount the order_queue/src directory in the current directory to the /app/order_executor/src directory in the container
-      - ./order_executor/src:/app/order_executor/src
-  order_executor_2:
-    build:
-      # Use the current directory as the build context
-      # This allows us to access the files in the current directory inside the Dockerfile
-      context: ./
-      # Use the Dockerfile in the order_executor directorys
-      dockerfile: ./order_executor/Dockerfile
-    ports:
-      # Expose port 50102 on the host, and map port 50102 of the container to port 50102 on the host
-      - 50102:50102
-    environment:
-      # Pass the environment variables to the container
-      # The PYTHONUNBUFFERED environment variable ensures that the output from the application is logged to the console
-      - PYTHONUNBUFFERED=TRUE
-      # The PYTHONFILE environment variable specifies the absolute entry point of the application
-      # Check app.py in the order_executor directory to see how this is used
-      - PYTHONFILE=/app/order_executor/src/app.py
-      - CONTAINER_ID=2
+      - PROCESS_AMOUNT=2
     volumes:
       # Mount the utils directory in the current directory to the /app/utils directory in the container
       - ./utils:/app/utils
