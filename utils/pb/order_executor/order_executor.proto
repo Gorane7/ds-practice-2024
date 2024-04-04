@@ -4,8 +4,18 @@ package hello;
 
 service OrderExecutor {
     rpc Token (TokenRequest) returns (TokenResponse);
+    rpc Restart (RestartRequest) returns (RestartResponse);
 }
 
 message TokenRequest {}
 
 message TokenResponse {}
+
+message RestartRequest {
+    int32 restarter_id = 1;
+}
+
+message RestartResponse {
+    int32 next_id = 1;
+    bool restart_success = 2;
+}

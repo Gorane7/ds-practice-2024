@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14order_executor.proto\x12\x05hello\"\x0e\n\x0cTokenRequest\"\x0f\n\rTokenResponse2C\n\rOrderExecutor\x12\x32\n\x05Token\x12\x13.hello.TokenRequest\x1a\x14.hello.TokenResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14order_executor.proto\x12\x05hello\"\x0e\n\x0cTokenRequest\"\x0f\n\rTokenResponse\"&\n\x0eRestartRequest\x12\x14\n\x0crestarter_id\x18\x01 \x01(\x05\";\n\x0fRestartResponse\x12\x0f\n\x07next_id\x18\x01 \x01(\x05\x12\x17\n\x0frestart_success\x18\x02 \x01(\x08\x32}\n\rOrderExecutor\x12\x32\n\x05Token\x12\x13.hello.TokenRequest\x1a\x14.hello.TokenResponse\x12\x38\n\x07Restart\x12\x15.hello.RestartRequest\x1a\x16.hello.RestartResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -25,6 +25,10 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_TOKENREQUEST']._serialized_end=45
   _globals['_TOKENRESPONSE']._serialized_start=47
   _globals['_TOKENRESPONSE']._serialized_end=62
-  _globals['_ORDEREXECUTOR']._serialized_start=64
-  _globals['_ORDEREXECUTOR']._serialized_end=131
+  _globals['_RESTARTREQUEST']._serialized_start=64
+  _globals['_RESTARTREQUEST']._serialized_end=102
+  _globals['_RESTARTRESPONSE']._serialized_start=104
+  _globals['_RESTARTRESPONSE']._serialized_end=163
+  _globals['_ORDEREXECUTOR']._serialized_start=165
+  _globals['_ORDEREXECUTOR']._serialized_end=290
 # @@protoc_insertion_point(module_scope)

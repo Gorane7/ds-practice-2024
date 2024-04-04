@@ -36,32 +36,55 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
         self.id = int(os.environ['CONTAINER_ID'])
         self.process_amount = int(os.environ['PROCESS_AMOUNT'])
         self.token = self.id == 0
+        self.next_id = (self.id + 1) % self.process_amount
         self.busy = False
+        self.operational = True
+        self.last_token_seen = time.time()
+        self.sleep_time = 0.5
+        self.panic_coefficient = 3
+        self.process_time = 5
         
         # Start a thread to periodically send requests to OrderQueue service
         self.periodic_request_thread = threading.Thread(target=self.send_periodic_request)
         self.periodic_request_thread.daemon = True
         self.periodic_request_thread.start()
+
+        # TODO: If executor starts before queue, then it crashes currently
     
     def send_periodic_request(self):
         while True:
-            time.sleep(1)
+            if self.operational:
+                if random.random() < 0.01:
+                    self.operational = False
+                    print(f"ERROR: Crash and burn")
+            else:
+                if random.random() < 0.1:
+                    self.operational = True
+                    print(f"SUCCESS: Came back to life")
+            time.sleep(self.sleep_time)
+            if not self.operational:
+                continue
             if self.token:
+                self.last_token_seen = time.time()
                 if not self.busy:
-                    print("Asking for orders")
+                    #print("Asking for orders")
                     request = order_queue.DequeueRequest()
                     response = self.stub.Dequeue(request)
                     if response.have_order:
-                        print("Got orders")
+                        #print("Got orders")
                         threading.Thread(target=self.process_request, args=(response.booknames, )).start()
                     else:
-                        print(f"Did not have order to execute")
-                self.send_token((self.id + 1) % self.process_amount)
+                        pass
+                        #print(f"Did not have order to execute")
+                self.send_token(self.next_id)
+            else:
+                if time.time() - self.last_token_seen > self.sleep_time * self.process_amount * self.panic_coefficient:
+                    self.ask_restart()
     
     def process_request(self, booknames):
         self.busy = True
         print(f"Starting processing of {booknames}")
-        time.sleep(random.random() * 10 + 10)
+        time.sleep(self.process_time * (1.5 - random.random()))
         print(f"Finished processing of {booknames}")
         self.busy = False
     
@@ -77,9 +100,47 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
             print("Got error: " + str(e))
             print("Failed to send away token, taking it back")
             self.token = True
+            self.next_id = (self.next_id + 1) % self.process_amount
+        
+    def ask_restart(self):
+        print("Haven't seen token in a while, asking to be let back in the ring")
+        previous = (self.id - 1) % self.process_amount
+        while True:
+            try:
+                with grpc.insecure_channel(f"order_executor_{previous}:{50100 + previous}") as channel:
+                    stub = order_executor_grpc.OrderExecutorStub(channel)
+                    request = order_executor.RestartRequest(restarter_id=self.id)
+                    response = stub.Restart(request)
+                    # When getting restartrequest, then check if current next id is smaller than the person asking for a restart, if is, then tell him to restart the restart
+                    if not response.restart_success:
+                        previous = (self.id - 1) % self.process_amount
+                    break
+            except Exception as e:
+                print(e)
+                previous = (self.id - 1) % self.process_amount
+        self.next_id = response.next_id
+        self.last_token_seen = time.time()
+    
+    def Restart(self, request, context):
+        print(f"{request.restarter_id} asked to be let back in the ring")
+        if self.id == self.next_id:
+            print(f"Node was alone in the ring, adding other")
+            response = order_executor.RestartResponse(next_id=self.id, restart_success=True)
+            self.next_id = request.restarter_id
+            return response
+        # Order in rings modulo N is complicated
+        if not (self.id < request.restarter_id < self.next_id or request.restarter_id < self.next_id < self.id or self.next_id < self.id < request.restarter_id):
+            response = order_executor.RestartResponse(next_id=request.restarter_id, restart_success=False)
+            return response
+        print(f"Telling {request.restarter_id} to send token to {self.next_id} and starting to send myself to {request.restarter_id}")
+        response = order_executor.RestartResponse(next_id=self.next_id, restart_success=True)
+        self.next_id = request.restarter_id
+        return response
+    
     
     def Token(self, request, context):
-        print("Received token")
+        if not self.operational:
+            return
         self.token = True
         response = order_executor.TokenResponse()
         return response
