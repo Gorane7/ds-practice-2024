@@ -5,6 +5,13 @@ package hello;
 service HelloService {
     rpc SayHello (HelloRequest) returns (HelloResponse);
     rpc DetectFraud (FraudRequest) returns (FraudResponse);
+    rpc VectorClockUpdate (VectorClockInp_fraud) returns (Empty_fraud);
+}
+
+message Empty_fraud {}
+
+message VectorClockInp_fraud {
+    repeated int32 vector_clock = 1;
 }
 
 message HelloRequest {

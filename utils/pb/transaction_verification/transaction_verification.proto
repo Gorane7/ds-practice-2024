@@ -4,6 +4,13 @@ package hello;
 
 service VerifService {
     rpc Verify (VerifyRequest) returns (VerifyResponse);
+    rpc VectorClockUpdate (VectorClockInp_trans) returns (Empty_trans);
+}
+
+message Empty_trans {}
+
+message VectorClockInp_trans {
+    repeated int32 vector_clock = 1;
 }
 
 message Item { 

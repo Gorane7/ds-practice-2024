@@ -5,6 +5,16 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
+class Empty_trans(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class VectorClockInp_trans(_message.Message):
+    __slots__ = ("vector_clock",)
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
+    vector_clock: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, vector_clock: _Optional[_Iterable[int]] = ...) -> None: ...
+
 class Item(_message.Message):
     __slots__ = ("name", "quantity")
     NAME_FIELD_NUMBER: _ClassVar[int]

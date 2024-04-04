@@ -26,9 +26,18 @@ def calculate_similarity(book, other_book):
 # Create a class to define the server functions, derived from
 # suggestions_service_pb2_grpc.HelloServiceServicer
 class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
+    def __init__(self):
+        self.vector_clock = [0,0,0,0,0]
+    
+    def VectorClockUpdate(self, request, context):
+        self.vector_clock = [max(self.vector_clock[i], request.vector_clock[i]) for i in range(3)]
+        return suggestions_service.Empty_sugg()
+
     # Create an RPC function to say hello
     def Suggest(self, request, context):
         start = time.time()
+        while not self.depCheck(self.vector_clock, [1,1,1,1,0]):
+            time.sleep(0.1)
         suggested_books = []
         book_pool = [i.title for i in request.books]
         print(f"Pool of books to choose from: {book_pool}")
@@ -53,6 +62,9 @@ class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
         print(f"Book chosen to suggest: {book.title}")
         print(f"Time taken to choose books: {round(time.time()-start,4)}")
         return response
+    
+    def depCheck(self, vec1, vec2):
+        return min([vec1[i]>=vec2[i] for i in range(len(vec1))])
 
 def serve():
     # Create a gRPC server

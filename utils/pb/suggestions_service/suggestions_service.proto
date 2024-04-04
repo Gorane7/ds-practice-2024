@@ -4,6 +4,13 @@ package hello;
 
 service SuggestionsService {
     rpc Suggest (SuggestionRequest) returns (SuggestionResponse);
+    rpc VectorClockUpdate (VectorClockInp_sugg) returns (Empty_sugg);
+}
+
+message Empty_sugg {}
+
+message VectorClockInp_sugg {
+    repeated int32 vector_clock = 1;
 }
 
 message Book {
