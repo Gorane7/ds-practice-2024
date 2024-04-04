@@ -15,11 +15,17 @@ sys.path.insert(0, utils_path)
 import transaction_verification_pb2 as transaction_verification
 import transaction_verification_pb2_grpc as transaction_verification_grpc
 
+utils_path3 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions_service'))
+sys.path.insert(0, utils_path3)
+
 utils_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 sys.path.insert(0, utils_path)
 
 import fraud_detection_pb2 as fraud_detection
 import fraud_detection_pb2_grpc as fraud_detection_grpc
+
+import suggestions_service_pb2 as suggestions_service
+import suggestions_service_pb2_grpc as suggestions_service_grpc
 
 import grpc
 from concurrent import futures
@@ -28,14 +34,16 @@ from concurrent import futures
 # transaction_verification_pb2_grpc.HelloServiceServicer
 class VerifService(transaction_verification_grpc.VerifServiceServicer):
     def __init__(self):
-        self.vector_clock = defaultdict(lambda : [0,0,0,0,0])
+        self.vector_clock = defaultdict(lambda : [0,0,0])
         self.response = defaultdict(lambda : transaction_verification.VerifyResponse())
         self.die = defaultdict(lambda : False)
-        self.part1dep = [0,0,0,0,0]
-        self.part2dep = [0,0,0,0,0]
+        self.part1dep = [0,0,0]
+        self.part2dep = [3,5,2]
 
     def VectorClockUpdate(self, request, context):
         self.vector_clock[request.order_id] = [max(self.vector_clock[request.order_id][i], request.vector_clock[i]) for i in range(len(request.vector_clock))]
+        self.vector_clock[request.order_id][0]+=1
+        print(f"Clock is {self.vector_clock[request.order_id]}")
         return transaction_verification.Empty_trans()
 
     # Create an RPC function to say hello
@@ -75,7 +83,7 @@ class VerifService(transaction_verification_grpc.VerifServiceServicer):
         print(f"Bitmap of transaction verification results from part 1: {decision}")
         print(f"Time taken to verify transaction part 1 {round(time.time()-start, 4)}")
         self.response[order_id].decision ^= decision
-        self.vector_clock[order_id][0]+=1
+        self.vector_clock[order_id][0]+=2
         with grpc.insecure_channel('fraud_detection:50051') as channel:
             stub = fraud_detection_grpc.HelloServiceStub(channel)
             vec_clock_msg = fraud_detection.VectorClockInp_fraud()
@@ -116,10 +124,10 @@ class VerifService(transaction_verification_grpc.VerifServiceServicer):
         print(f"Bitmap of transaction verification results from part 2: {decision}")
         print(f"Time taken to verify transaction part 2 {round(time.time()-start, 4)}")
         self.response[order_id].decision ^= decision
-        self.vector_clock[order_id][1]+=1
-        with grpc.insecure_channel('fraud_detection:50051') as channel:
-            stub = fraud_detection_grpc.HelloServiceStub(channel)
-            vec_clock_msg = fraud_detection.VectorClockInp_fraud()
+        self.vector_clock[order_id][0]+=2
+        with grpc.insecure_channel('suggestions_service:50053') as channel:
+            stub = suggestions_service_grpc.SuggestionsServiceStub(channel)
+            vec_clock_msg = suggestions_service.VectorClockInp_sugg()
             vec_clock_msg.vector_clock.extend(self.vector_clock[order_id])
             vec_clock_msg.order_id = order_id
             stub.VectorClockUpdate(vec_clock_msg)

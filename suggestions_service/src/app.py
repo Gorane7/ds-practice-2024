@@ -3,6 +3,7 @@ import os
 import random
 import time
 from collections import defaultdict
+import threading
 
 import gensim.downloader as api
 
@@ -14,6 +15,13 @@ utils_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions_s
 sys.path.insert(0, utils_path)
 import suggestions_service_pb2 as suggestions_service
 import suggestions_service_pb2_grpc as suggestions_service_grpc
+
+utils_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
+sys.path.insert(0, utils_path)
+
+import fraud_detection_pb2 as fraud_detection
+import fraud_detection_pb2_grpc as fraud_detection_grpc
+
 
 import grpc
 from concurrent import futures
@@ -28,20 +36,59 @@ def calculate_similarity(book, other_book):
 # suggestions_service_pb2_grpc.HelloServiceServicer
 class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
     def __init__(self):
-        self.vector_clock = defaultdict(lambda : [0,0,0,0,0])
+        self.vector_clock = defaultdict(lambda : [0,0,0])
+        self.response = defaultdict(lambda : suggestions_service.SuggestionResponse())
         self.die = defaultdict(lambda : False)
+        self.part1dep = [0,0,0]
+        self.part2dep = [5,5,3]
     
     def VectorClockUpdate(self, request, context):
         self.vector_clock[request.order_id] = [max(self.vector_clock[request.order_id][i], request.vector_clock[i]) for i in range(len(request.vector_clock))]
+        self.vector_clock[request.order_id][2] += 1
+        print(f"Clock is {self.vector_clock[request.order_id]}")
         return suggestions_service.Empty_sugg()
 
     # Create an RPC function to say hello
     def Suggest(self, request, context):
+        thread1 = threading.Thread(target=self.suggestPart1, args=(request.order_id, request))
+        thread2 = threading.Thread(target=self.suggestPart2, args=(request.order_id, request))
+        thread1.start()
+        thread2.start()
+        thread1.join()
+        thread2.join()
+        resp = self.response[request.order_id]
+        if request.order_id in self.die:
+            self.die.pop(request.order_id)
+        if request.order_id in self.response:
+            self.response.pop(request.order_id)
+        if request.order_id in self.vector_clock:
+            self.vector_clock.pop(request.order_id)
+        return resp
+    
+    def suggestPart1(self, order_id, request):
         start = time.time()
-        while self.die[request.order_id] or not self.depCheck(self.vector_clock[request.order_id], [1,1,1,1,0]):
+        while self.die[order_id] or not self.depCheck(self.vector_clock[request.order_id], self.part1dep):
             time.sleep(0.1)
             if self.die[request.order_id]:
-                return suggestions_service.SuggestionResponse(books = [])
+                return
+        # Do something useful
+        response =  suggestions_service.SuggestionResponse()
+        print(f"Time taken to verify book: {round(time.time()-start,4)}")
+        self.response[order_id] = response
+        self.vector_clock[order_id][2]+=2
+        with grpc.insecure_channel('fraud_detection:50051') as channel:
+            stub = fraud_detection_grpc.HelloServiceStub(channel)
+            vec_clock_msg = fraud_detection.VectorClockInp_fraud()
+            vec_clock_msg.vector_clock.extend(self.vector_clock[order_id])
+            vec_clock_msg.order_id = order_id
+            stub.VectorClockUpdate(vec_clock_msg)
+    
+    def suggestPart2(self, order_id, request):
+        start = time.time()
+        while self.die[order_id] or not self.depCheck(self.vector_clock[request.order_id], self.part2dep):
+            time.sleep(0.1)
+            if self.die[request.order_id]:
+                return
         suggested_books = []
         book_pool = [i.title for i in request.books]
         print(f"Pool of books to choose from: {book_pool}")
@@ -62,14 +109,10 @@ class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
             book = random.choice(request.books)
             response = suggestions_service.SuggestionResponse(books = [book])
 
-        if request.order_id in self.die:
-            self.die.pop(request.order_id)
-        if request.order_id in self.vector_clock:
-            self.vector_clock.pop(request.order_id)
         print(f"Books that were ordered by the user: {request.ordered}")
         print(f"Book chosen to suggest: {book.title}")
         print(f"Time taken to choose books: {round(time.time()-start,4)}")
-        return response
+        self.response[order_id] = response
     
     def Kill(self, request, context):
         self.die[request.order_id] = True

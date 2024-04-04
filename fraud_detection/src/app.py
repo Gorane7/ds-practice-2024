@@ -16,8 +16,14 @@ import fraud_detection_pb2_grpc as fraud_detection_grpc
 utils_path3 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions_service'))
 sys.path.insert(0, utils_path3)
 
+utils_path2 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
+sys.path.insert(0, utils_path2)
+
 import suggestions_service_pb2 as suggestions_service
 import suggestions_service_pb2_grpc as suggestions_service_grpc
+
+import transaction_verification_pb2 as transaction_verification
+import transaction_verification_pb2_grpc as transaction_verification_grpc
 
 import grpc
 from concurrent import futures
@@ -26,14 +32,16 @@ from concurrent import futures
 # fraud_detection_pb2_grpc.HelloServiceServicer
 class HelloService(fraud_detection_grpc.HelloServiceServicer):
     def __init__(self):
-        self.vector_clock = defaultdict(lambda : [0,0,0,0,0])
+        self.vector_clock = defaultdict(lambda : [0,0,0])
         self.response = defaultdict(lambda : None)
         self.die = defaultdict(lambda : False)
-        self.part1dep = [1,0,0,0,0]
-        self.part2dep = [0,1,0,0,0]
+        self.part1dep = [2,1,0]
+        self.part2dep = [2,3,2]
 
     def VectorClockUpdate(self, request, context):
         self.vector_clock[request.order_id] = [max(self.vector_clock[request.order_id][i], request.vector_clock[i]) for i in range(len(request.vector_clock))]
+        self.vector_clock[request.order_id][1] += 1
+        print(f"Clock is {self.vector_clock[request.order_id]}")
         return fraud_detection.Empty_fraud()
 
     # Create an RPC function to say hello
@@ -75,15 +83,17 @@ class HelloService(fraud_detection_grpc.HelloServiceServicer):
         if response.decision:
             print(f"Found fraudulent behaviour")
         print(f"Time taken to detect fraudulent behaviour: {round(time.time()-start, 4)}")
-        self.vector_clock[order_id][2]+=1
+        self.vector_clock[order_id][1]+=1
         self.response[order_id] = response
-        with grpc.insecure_channel('suggestions_service:50053') as channel:
-            stub = suggestions_service_grpc.SuggestionsServiceStub(channel)
-            vec_clock_msg = suggestions_service.VectorClockInp_sugg()
+        '''
+        with grpc.insecure_channel('fraud_detection:50051') as channel:
+            stub = fraud_detection_grpc.HelloServiceStub(channel)
+            vec_clock_msg = fraud_detection.VectorClockInp_fraud()
             vec_clock_msg.vector_clock.extend(self.vector_clock[order_id])
             vec_clock_msg.order_id = order_id
             stub.VectorClockUpdate(vec_clock_msg)
-        
+        '''
+
     def DetectFraudPart2(self, order_id, request):
         while self.die[order_id] or not self.depCheck(self.vector_clock[order_id],self.part2dep):
             time.sleep(0.1)
@@ -95,11 +105,11 @@ class HelloService(fraud_detection_grpc.HelloServiceServicer):
         if response.decision:
             print(f"Found fraudulent behaviour")
         print(f"Time taken to detect fraudulent behaviour: {round(time.time()-start, 4)}")
-        self.vector_clock[order_id][3]+=1
+        self.vector_clock[order_id][1]+=2
         self.response [order_id]= response
-        with grpc.insecure_channel('suggestions_service:50053') as channel:
-            stub = suggestions_service_grpc.SuggestionsServiceStub(channel)
-            vec_clock_msg = suggestions_service.VectorClockInp_sugg()
+        with grpc.insecure_channel('transaction_verification:50052') as channel:
+            stub = transaction_verification_grpc.VerifServiceStub(channel)
+            vec_clock_msg = transaction_verification.VectorClockInp_trans()
             vec_clock_msg.vector_clock.extend(self.vector_clock[order_id])
             vec_clock_msg.order_id = order_id
             stub.VectorClockUpdate(vec_clock_msg)
