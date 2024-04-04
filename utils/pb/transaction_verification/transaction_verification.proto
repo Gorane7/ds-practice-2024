@@ -5,12 +5,18 @@ package hello;
 service VerifService {
     rpc Verify (VerifyRequest) returns (VerifyResponse);
     rpc VectorClockUpdate (VectorClockInp_trans) returns (Empty_trans);
+    rpc Kill (KillOrder_trans) returns (Empty_trans);
+}
+
+message KillOrder_trans {
+    int64 order_id = 1;
 }
 
 message Empty_trans {}
 
 message VectorClockInp_trans {
     repeated int32 vector_clock = 1;
+    int64 order_id = 2;
 }
 
 message Item { 
@@ -31,6 +37,7 @@ message VerifyRequest {
     repeated Item items = 1;
     UserInfo userInfo = 2;
     CreditInfo creditInfo = 3;
+    int64 order_id = 4;
 }
 
 message VerifyResponse {

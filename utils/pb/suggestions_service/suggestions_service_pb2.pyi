@@ -5,15 +5,23 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
+class KillOrder_sugg(_message.Message):
+    __slots__ = ("order_id",)
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    order_id: int
+    def __init__(self, order_id: _Optional[int] = ...) -> None: ...
+
 class Empty_sugg(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
 class VectorClockInp_sugg(_message.Message):
-    __slots__ = ("vector_clock",)
+    __slots__ = ("vector_clock", "order_id")
     VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     vector_clock: _containers.RepeatedScalarFieldContainer[int]
-    def __init__(self, vector_clock: _Optional[_Iterable[int]] = ...) -> None: ...
+    order_id: int
+    def __init__(self, vector_clock: _Optional[_Iterable[int]] = ..., order_id: _Optional[int] = ...) -> None: ...
 
 class Book(_message.Message):
     __slots__ = ("bookId", "title", "author")
@@ -26,12 +34,14 @@ class Book(_message.Message):
     def __init__(self, bookId: _Optional[str] = ..., title: _Optional[str] = ..., author: _Optional[str] = ...) -> None: ...
 
 class SuggestionRequest(_message.Message):
-    __slots__ = ("books", "ordered")
+    __slots__ = ("books", "ordered", "order_id")
     BOOKS_FIELD_NUMBER: _ClassVar[int]
     ORDERED_FIELD_NUMBER: _ClassVar[int]
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     books: _containers.RepeatedCompositeFieldContainer[Book]
     ordered: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, books: _Optional[_Iterable[_Union[Book, _Mapping]]] = ..., ordered: _Optional[_Iterable[str]] = ...) -> None: ...
+    order_id: int
+    def __init__(self, books: _Optional[_Iterable[_Union[Book, _Mapping]]] = ..., ordered: _Optional[_Iterable[str]] = ..., order_id: _Optional[int] = ...) -> None: ...
 
 class SuggestionResponse(_message.Message):
     __slots__ = ("books",)

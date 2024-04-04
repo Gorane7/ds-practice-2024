@@ -6,12 +6,18 @@ service HelloService {
     rpc SayHello (HelloRequest) returns (HelloResponse);
     rpc DetectFraud (FraudRequest) returns (FraudResponse);
     rpc VectorClockUpdate (VectorClockInp_fraud) returns (Empty_fraud);
+    rpc Kill (KillOrder_fraud) returns (Empty_fraud);
+}
+
+message KillOrder_fraud {
+    int64 order_id = 1;
 }
 
 message Empty_fraud {}
 
 message VectorClockInp_fraud {
     repeated int32 vector_clock = 1;
+    int64 order_id = 2;
 }
 
 message HelloRequest {
@@ -22,8 +28,16 @@ message HelloResponse {
     string greeting = 1;
 }
 
+message CreditInfo2 {
+    string number = 1;
+    string expirationDate = 2;
+    string cvv = 3;
+}
+
 message FraudRequest {
     string name = 1;
+    CreditInfo2 creditInfo = 2;
+    int64 order_id = 3;
 }
 
 message FraudResponse {

@@ -24,6 +24,11 @@ class SuggestionsServiceStub(object):
                 request_serializer=suggestions__service__pb2.VectorClockInp_sugg.SerializeToString,
                 response_deserializer=suggestions__service__pb2.Empty_sugg.FromString,
                 )
+        self.Kill = channel.unary_unary(
+                '/hello.SuggestionsService/Kill',
+                request_serializer=suggestions__service__pb2.KillOrder_sugg.SerializeToString,
+                response_deserializer=suggestions__service__pb2.Empty_sugg.FromString,
+                )
 
 
 class SuggestionsServiceServicer(object):
@@ -41,6 +46,12 @@ class SuggestionsServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Kill(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SuggestionsServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -52,6 +63,11 @@ def add_SuggestionsServiceServicer_to_server(servicer, server):
             'VectorClockUpdate': grpc.unary_unary_rpc_method_handler(
                     servicer.VectorClockUpdate,
                     request_deserializer=suggestions__service__pb2.VectorClockInp_sugg.FromString,
+                    response_serializer=suggestions__service__pb2.Empty_sugg.SerializeToString,
+            ),
+            'Kill': grpc.unary_unary_rpc_method_handler(
+                    servicer.Kill,
+                    request_deserializer=suggestions__service__pb2.KillOrder_sugg.FromString,
                     response_serializer=suggestions__service__pb2.Empty_sugg.SerializeToString,
             ),
     }
@@ -94,6 +110,23 @@ class SuggestionsService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/hello.SuggestionsService/VectorClockUpdate',
             suggestions__service__pb2.VectorClockInp_sugg.SerializeToString,
+            suggestions__service__pb2.Empty_sugg.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Kill(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hello.SuggestionsService/Kill',
+            suggestions__service__pb2.KillOrder_sugg.SerializeToString,
             suggestions__service__pb2.Empty_sugg.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -5,15 +5,23 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
+class KillOrder_trans(_message.Message):
+    __slots__ = ("order_id",)
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    order_id: int
+    def __init__(self, order_id: _Optional[int] = ...) -> None: ...
+
 class Empty_trans(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 
 class VectorClockInp_trans(_message.Message):
-    __slots__ = ("vector_clock",)
+    __slots__ = ("vector_clock", "order_id")
     VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     vector_clock: _containers.RepeatedScalarFieldContainer[int]
-    def __init__(self, vector_clock: _Optional[_Iterable[int]] = ...) -> None: ...
+    order_id: int
+    def __init__(self, vector_clock: _Optional[_Iterable[int]] = ..., order_id: _Optional[int] = ...) -> None: ...
 
 class Item(_message.Message):
     __slots__ = ("name", "quantity")
@@ -42,14 +50,16 @@ class CreditInfo(_message.Message):
     def __init__(self, number: _Optional[str] = ..., expirationDate: _Optional[str] = ..., cvv: _Optional[str] = ...) -> None: ...
 
 class VerifyRequest(_message.Message):
-    __slots__ = ("items", "userInfo", "creditInfo")
+    __slots__ = ("items", "userInfo", "creditInfo", "order_id")
     ITEMS_FIELD_NUMBER: _ClassVar[int]
     USERINFO_FIELD_NUMBER: _ClassVar[int]
     CREDITINFO_FIELD_NUMBER: _ClassVar[int]
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     items: _containers.RepeatedCompositeFieldContainer[Item]
     userInfo: UserInfo
     creditInfo: CreditInfo
-    def __init__(self, items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ..., userInfo: _Optional[_Union[UserInfo, _Mapping]] = ..., creditInfo: _Optional[_Union[CreditInfo, _Mapping]] = ...) -> None: ...
+    order_id: int
+    def __init__(self, items: _Optional[_Iterable[_Union[Item, _Mapping]]] = ..., userInfo: _Optional[_Union[UserInfo, _Mapping]] = ..., creditInfo: _Optional[_Union[CreditInfo, _Mapping]] = ..., order_id: _Optional[int] = ...) -> None: ...
 
 class VerifyResponse(_message.Message):
     __slots__ = ("decision",)
