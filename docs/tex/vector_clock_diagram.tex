@@ -7,6 +7,7 @@
 \usepackage{listings}
 \usepackage{geometry}
 %\geometry{textheight=\paperheight, noheadfoot, nomarginpar}
+\geometry{margin=0.5in}
 \usetikzlibrary{positioning,shapes,shadows}
 \renewcommand{\familydefault}{\sfdefault}
 
@@ -46,69 +47,84 @@
 \section {Vector clock diagram}
 \begin{tikzpicture}
 
-\node at (0, 0.5) {Transaction verification 2};
-\node at (0, -0.25) {[0, 0, 0, 0, 0]};
-\node at (0, 2.5) {Fraud detection 2};
-\node at (0, 1.75) {[0, 0, 0, 0, 0]};
-\node at (0, 4.5) {Suggestions service};
-\node at (0, 3.75) {[0, 0, 0, 0, 0]};
-\node at (0, 6.5) {Fraud detection 1};
-\node at (0, 5.75) {[0, 0, 0, 0, 0]};
-\node at (-0.5, 8.5) {Transaction verification 1};
-\node at (0, 7.75) {[0, 0, 0, 0, 0]};
+\node at (0, 0.5) {Suggestions service};
+\node at (0, -0.25) {[0, 0, 0]};
+\node at (0, 2.5) {Fraud detection};
+\node at (0, 1.75) {[0, 0, 0]};
+\node at (-0.5, 4.5) {Transaction verification};
+\node at (0, 3.75) {[0, 0, 0]};
 
 % Draw horizontal lines
-\draw (1,0) -- (11,0);
-\draw (1,2) -- (11,2);
-\draw (1,4) -- (11,4);
-\draw (1,6) -- (11,6);
-\draw (1,8) -- (11,8);
+\draw (1,0) -- (14,0);
+\draw (1,2) -- (14,2);
+\draw (1,4) -- (14,4);
 
-\node at (3, -0.25) {[0, 0, 0, 0, 2]};
-\draw[-latex] (3, 0) -- (4, 2);
-\node at (3, 2.25) {[0, 0, 0, 1, 2]};
-\node at (5.5, 1.75) {[0, 0, 0, 3, 2]};
-\draw[-latex] (5, 2) -- (7, 4);
+%\node at (3, -0.25) {[0, 0, 2]};
+%\draw[-latex] (3, 0) -- (4, 2);
+%\fill (1.5,0) circle [radius=2pt];
+%\node at (1.5,-0.25) {A};
 
-\node at (3, 8.25) {[2, 0, 0, 0, 0]};
-\draw[-latex] (2.5, 8) -- (3.5, 6);
-\node at (2.75, 5.75) {[2, 1, 0, 0, 0]};
-\node at (5.25, 6.25) {[2, 3, 0, 0, 0]};
-\draw[-latex] (4.5, 6) -- (5.5, 4);
-\node at (4.75, 3.75) {[2, 3, 1, 0, 0]};
+\fill (2, 0) circle [radius=2pt];
+\node at (2, 0.25) {A};
 
-\node at (7.5, 4.25) {[2, 3, 2, 3, 2]};
+\fill (2, 4) circle [radius=2pt];
+\node at (2, 4.25) {B};
 
-\fill (1.5,0) circle [radius=2pt];
-\node at (1.5,-0.25) {A};
+\draw[-latex] (3, 4) -- (3.5, 2);
 
-\fill (4.4,2) circle [radius=2pt];
-\node at (4.4,2.25) {B};
+\fill (4.5, 2) circle [radius=2pt];
+\node at (4.5, 2.25) {C};
 
-\fill (1.5,8) circle [radius=2pt];
-\node at (1.5,7.75) {C};
+\draw[-latex] (3, 0) -- (5.5, 2);
 
-\fill (3.9,6) circle [radius=2pt];
-\node at (3.9,6.25) {D};
+\fill (6.5, 2) circle [radius=2pt];
+\node at (6.5, 2.25) {D};
 
-\fill (9,4) circle [radius=2pt];
-\node at (9,4.25) {E};
+\draw[-latex] (7.5, 2) -- (8, 4);
+
+\fill (9, 4) circle [radius=2pt];
+\node at (9, 4.25) {E};
+
+\draw[-latex] (10, 4) -- (10.5, 0);
+
+\fill (11.5, 0) circle [radius=2pt];
+\node at (11.5, 0.25) {F};
 
 
-\node at (1.5, -2) {[0, 0, 0, 0, 1]};
-\draw (1.5, -1.75) -- (1.5, -0.5);
 
-\node at (5, 1) {[0, 0, 0, 2, 2]};
-\draw (4.4, 1.25) -- (4.4, 1.85);
+\node at (2, -1) {[0, 0, 1]};
+\draw (2, -0.75) -- (2, -0.15);
 
-\node at (1, 9) {[1, 0, 0, 0, 0]};
-\draw (1.5, 8.75) -- (1.5, 8.15);
+\node at (3.15, -0.25) {[0, 0, 2]};
 
-\node at (5, 7) {[2, 2, 0, 0, 0]};
-\draw (3.9, 6.5) -- (4, 6.75);
+\node at (2, 5) {[1, 0, 0]};
+\draw (2, 4.75) -- (2, 4.5);
 
-\node at (9.5, 3.75) {[2, 3, 3, 3, 2]};
+\node at (3.15, 4.25) {[2, 0, 0]};
 
+\node at (3.15, 1.75) {[2, 1, 0]};
+
+\node at (4.35, 3) {[2, 2, 0]};
+\draw (4.5, 2.75) -- (4.5, 2.5);
+
+\node at (5.35, 2.25) {[2, 3, 2]};
+
+\node at (6.25, 3) {[2, 4, 2]};
+\draw (6.5, 2.75) -- (6.5, 2.5);
+
+\node at (7.6, 1.75) {[2, 5, 2]};
+
+\node at (7.7, 4.25) {[3, 5, 2]};
+
+\node at (9, 5) {[4, 5, 2]};
+\draw (9, 4.75) -- (9, 4.5);
+
+\node at (10, 4.25) {[5, 5, 2]};
+
+\node at (10.4, -0.25) {[5, 5, 3]};
+
+\node at (11.5, 1) {[5, 5, 4]};
+\draw (11.5, 0.75) -- (11.5, 0.5);
 
 \end{tikzpicture}
 
