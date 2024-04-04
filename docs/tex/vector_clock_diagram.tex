@@ -6,6 +6,7 @@
 %\usepackage{helvet}
 \usepackage{listings}
 \usepackage{geometry}
+\usepackage{enumitem}
 %\geometry{textheight=\paperheight, noheadfoot, nomarginpar}
 \geometry{margin=0.5in}
 \usetikzlibrary{positioning,shapes,shadows}
@@ -128,5 +129,15 @@
 
 \end{tikzpicture}
 
+\section{Event legend}
+%\renewcommand{\theenumi}{\Alph{enumi}}
+\begin{enumerate}[label=\Alph* -]
+\item Suggestion service checks that it is able to tokenize the book name
+\item Check that name is non-empty
+\item Check that name does not contain suspicious characteristics
+\item Check that credit card number is not associated with the devil
+\item Check that credit card number is not empty
+\item Choose book to suggest next
+\end{enumerate}
 
 \end{document}

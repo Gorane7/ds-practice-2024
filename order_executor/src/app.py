@@ -97,7 +97,7 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
                 request = order_executor.TokenRequest()
                 response = stub.Token(request)
         except Exception as e:
-            print("Got error: " + str(e))
+            #print("Got error: " + str(e))
             print("Failed to send away token, taking it back")
             self.token = True
             self.next_id = (self.next_id + 1) % self.process_amount
