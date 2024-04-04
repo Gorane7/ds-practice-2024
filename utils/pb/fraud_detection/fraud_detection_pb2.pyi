@@ -1,8 +1,19 @@
+from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Optional as _Optional
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
+
+class Empty_fraud(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class VectorClockInp_fraud(_message.Message):
+    __slots__ = ("vector_clock",)
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
+    vector_clock: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, vector_clock: _Optional[_Iterable[int]] = ...) -> None: ...
 
 class HelloRequest(_message.Message):
     __slots__ = ("name",)
