@@ -40,7 +40,7 @@ class OrderQueue(order_queue_grpc.OrderQueueServicer):
             return response
         except:
             response = order_queue.DequeueResponse(booknames=[], have_order=False)
-            print(f"Did not have any orders queued")
+            #print(f"Did not have any orders queued")
             return response
 
 def serve():

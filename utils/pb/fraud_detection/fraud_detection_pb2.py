@@ -14,25 +14,29 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x66raud_detection.proto\x12\x05hello\"\r\n\x0b\x45mpty_fraud\",\n\x14VectorClockInp_fraud\x12\x14\n\x0cvector_clock\x18\x01 \x03(\x05\"\x1c\n\x0cHelloRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"!\n\rHelloResponse\x12\x10\n\x08greeting\x18\x01 \x01(\t\"\x1c\n\x0c\x46raudRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"!\n\rFraudResponse\x12\x10\n\x08\x64\x65\x63ision\x18\x01 \x01(\x08\x32\xc5\x01\n\x0cHelloService\x12\x35\n\x08SayHello\x12\x13.hello.HelloRequest\x1a\x14.hello.HelloResponse\x12\x38\n\x0b\x44\x65tectFraud\x12\x13.hello.FraudRequest\x1a\x14.hello.FraudResponse\x12\x44\n\x11VectorClockUpdate\x12\x1b.hello.VectorClockInp_fraud\x1a\x12.hello.Empty_fraudb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x66raud_detection.proto\x12\x05hello\"#\n\x0fKillOrder_fraud\x12\x10\n\x08order_id\x18\x01 \x01(\x03\"\r\n\x0b\x45mpty_fraud\">\n\x14VectorClockInp_fraud\x12\x14\n\x0cvector_clock\x18\x01 \x03(\x05\x12\x10\n\x08order_id\x18\x02 \x01(\x03\"\x1c\n\x0cHelloRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"!\n\rHelloResponse\x12\x10\n\x08greeting\x18\x01 \x01(\t\"B\n\x0b\x43reditInfo2\x12\x0e\n\x06number\x18\x01 \x01(\t\x12\x16\n\x0e\x65xpirationDate\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t\"V\n\x0c\x46raudRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12&\n\ncreditInfo\x18\x02 \x01(\x0b\x32\x12.hello.CreditInfo2\x12\x10\n\x08order_id\x18\x03 \x01(\x03\"!\n\rFraudResponse\x12\x10\n\x08\x64\x65\x63ision\x18\x01 \x01(\x08\x32\xf9\x01\n\x0cHelloService\x12\x35\n\x08SayHello\x12\x13.hello.HelloRequest\x1a\x14.hello.HelloResponse\x12\x38\n\x0b\x44\x65tectFraud\x12\x13.hello.FraudRequest\x1a\x14.hello.FraudResponse\x12\x44\n\x11VectorClockUpdate\x12\x1b.hello.VectorClockInp_fraud\x1a\x12.hello.Empty_fraud\x12\x32\n\x04Kill\x12\x16.hello.KillOrder_fraud\x1a\x12.hello.Empty_fraudb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'fraud_detection_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_EMPTY_FRAUD']._serialized_start=32
-  _globals['_EMPTY_FRAUD']._serialized_end=45
-  _globals['_VECTORCLOCKINP_FRAUD']._serialized_start=47
-  _globals['_VECTORCLOCKINP_FRAUD']._serialized_end=91
-  _globals['_HELLOREQUEST']._serialized_start=93
-  _globals['_HELLOREQUEST']._serialized_end=121
-  _globals['_HELLORESPONSE']._serialized_start=123
-  _globals['_HELLORESPONSE']._serialized_end=156
-  _globals['_FRAUDREQUEST']._serialized_start=158
-  _globals['_FRAUDREQUEST']._serialized_end=186
-  _globals['_FRAUDRESPONSE']._serialized_start=188
-  _globals['_FRAUDRESPONSE']._serialized_end=221
-  _globals['_HELLOSERVICE']._serialized_start=224
-  _globals['_HELLOSERVICE']._serialized_end=421
+  _globals['_KILLORDER_FRAUD']._serialized_start=32
+  _globals['_KILLORDER_FRAUD']._serialized_end=67
+  _globals['_EMPTY_FRAUD']._serialized_start=69
+  _globals['_EMPTY_FRAUD']._serialized_end=82
+  _globals['_VECTORCLOCKINP_FRAUD']._serialized_start=84
+  _globals['_VECTORCLOCKINP_FRAUD']._serialized_end=146
+  _globals['_HELLOREQUEST']._serialized_start=148
+  _globals['_HELLOREQUEST']._serialized_end=176
+  _globals['_HELLORESPONSE']._serialized_start=178
+  _globals['_HELLORESPONSE']._serialized_end=211
+  _globals['_CREDITINFO2']._serialized_start=213
+  _globals['_CREDITINFO2']._serialized_end=279
+  _globals['_FRAUDREQUEST']._serialized_start=281
+  _globals['_FRAUDREQUEST']._serialized_end=367
+  _globals['_FRAUDRESPONSE']._serialized_start=369
+  _globals['_FRAUDRESPONSE']._serialized_end=402
+  _globals['_HELLOSERVICE']._serialized_start=405
+  _globals['_HELLOSERVICE']._serialized_end=654
 # @@protoc_insertion_point(module_scope)

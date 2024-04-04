@@ -2,6 +2,7 @@ import sys
 import os
 import random
 import time
+from collections import defaultdict
 
 import gensim.downloader as api
 
@@ -27,17 +28,20 @@ def calculate_similarity(book, other_book):
 # suggestions_service_pb2_grpc.HelloServiceServicer
 class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
     def __init__(self):
-        self.vector_clock = [0,0,0,0,0]
+        self.vector_clock = defaultdict(lambda : [0,0,0,0,0])
+        self.die = defaultdict(lambda : False)
     
     def VectorClockUpdate(self, request, context):
-        self.vector_clock = [max(self.vector_clock[i], request.vector_clock[i]) for i in range(3)]
+        self.vector_clock[request.order_id] = [max(self.vector_clock[request.order_id][i], request.vector_clock[i]) for i in range(len(request.vector_clock))]
         return suggestions_service.Empty_sugg()
 
     # Create an RPC function to say hello
     def Suggest(self, request, context):
         start = time.time()
-        while not self.depCheck(self.vector_clock, [1,1,1,1,0]):
+        while self.die[request.order_id] or not self.depCheck(self.vector_clock[request.order_id], [1,1,1,1,0]):
             time.sleep(0.1)
+            if self.die[request.order_id]:
+                return suggestions_service.SuggestionResponse(books = [])
         suggested_books = []
         book_pool = [i.title for i in request.books]
         print(f"Pool of books to choose from: {book_pool}")
@@ -58,11 +62,22 @@ class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
             book = random.choice(request.books)
             response = suggestions_service.SuggestionResponse(books = [book])
 
+        if request.order_id in self.die:
+            self.die.pop(request.order_id)
+        if request.order_id in self.vector_clock:
+            self.vector_clock.pop(request.order_id)
         print(f"Books that were ordered by the user: {request.ordered}")
         print(f"Book chosen to suggest: {book.title}")
         print(f"Time taken to choose books: {round(time.time()-start,4)}")
         return response
     
+    def Kill(self, request, context):
+        self.die[request.order_id] = True
+        time.sleep(1)
+        if request.order_id in self.vector_clock:
+            self.vector_clock.pop(request.order_id)
+        return  suggestions_service.Empty_sugg()
+
     def depCheck(self, vec1, vec2):
         return min([vec1[i]>=vec2[i] for i in range(len(vec1))])
 

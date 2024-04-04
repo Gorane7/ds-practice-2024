@@ -90,7 +90,7 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
     
     def send_token(self, remote_id):
         self.token = False
-        print(f"Sending away token to {remote_id}")
+        #print(f"Sending away token to {remote_id}")
         try:
             with grpc.insecure_channel(f"order_executor_{remote_id}:{50100 + remote_id}") as channel:
                 stub = order_executor_grpc.OrderExecutorStub(channel)

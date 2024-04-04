@@ -44,36 +44,54 @@ def greet(name='you'):
         response = stub.SayHello(fraud_detection.HelloRequest(name=name))
     return response.greeting
 
-def detect_fraud(name='you', resp={}, kill_flag=False):
+def detect_fraud(name='you', req={}, resp={}, order_id=0):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('fraud_detection:50051') as channel:
         # Create a stub object.
         stub = fraud_detection_grpc.HelloServiceStub(channel)
         # Call the service through the stub object.
-        response = stub.DetectFraud(fraud_detection.FraudRequest(name=name)) 
+        response = stub.DetectFraud(fraud_detection.FraudRequest(name=name, creditInfo= req["creditCard"], order_id=order_id))
     resp["fraud"] = response.decision
+    if response.decision:
+        kill_all_services(order_id)
     
-def verify_transaction(req={}, resp={}, kill_flag=False):
+def verify_transaction(req={}, resp={}, order_id=0):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('transaction_verification:50052') as channel:
         # Create a stub object.
         stub = transaction_verification_grpc.VerifServiceStub(channel)
         # Call the service through the stub object.
-        response = stub.Verify(transaction_verification.VerifyRequest(items=req['items'], userInfo=req['user'], creditInfo=req['creditCard']))
+        response = stub.Verify(transaction_verification.VerifyRequest(items=req['items'], userInfo=req['user'], creditInfo=req['creditCard'], order_id=order_id))
     resp["verif"] = response.decision
+    if response.decision:
+        kill_all_services(order_id)
     
-def suggest_service(pool=[], ordered_books=[], resp={}, kill_flag=False):
+def suggest_service(pool=[], ordered_books=[], resp={}, order_id=0):
     # Establish a connection with the fraud-detection gRPC service.
     with grpc.insecure_channel('suggestions_service:50053') as channel:
         # Create a stub object.
         stub = suggestions_service_grpc.SuggestionsServiceStub(channel)
         # Call the service through the stub object.
-        response = stub.Suggest(suggestions_service.SuggestionRequest(books=pool, ordered=ordered_books))
+        response = stub.Suggest(suggestions_service.SuggestionRequest(books=pool, ordered=ordered_books, order_id=order_id))
         res = []
         for book in response.books:
             res.append({"bookId":book.bookId, "title":book.title, "author":book.author})
     resp["suggestions"] = res
 
+def kill_all_services(order_id):
+    with grpc.insecure_channel('fraud_detection:50051') as channel:
+        stub = fraud_detection_grpc.HelloServiceStub(channel)
+        killorder = fraud_detection.KillOrder_fraud(order_id=order_id)
+        stub.Kill(killorder)
+    with grpc.insecure_channel('transaction_verification:50052') as channel:
+        stub = transaction_verification_grpc.VerifServiceStub(channel)
+        killorder = transaction_verification.KillOrder_trans(order_id=order_id)
+        stub.Kill(killorder)
+    with grpc.insecure_channel('suggestions_service:50053') as channel:
+        stub = suggestions_service_grpc.SuggestionsServiceStub(channel)
+        killorder = suggestions_service.KillOrder_sugg(order_id=order_id)
+        stub.Kill(killorder)
+        
 def enqueue_order(books=[], resp={}):
     # Establish a connection with the order-queue gRPC service.
     with grpc.insecure_channel('order_queue:50054') as channel:
@@ -124,10 +142,9 @@ def checkout():
     book_names = [x["name"] for x in request.json["items"]]
     
     responses = {}
-    kill_flag = [False]
-    fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "resp": responses, "kill_flag":kill_flag})
-    verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses, "kill_flag":kill_flag})
-    suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses, "kill_flag":kill_flag})
+    fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "req":request.json, "resp": responses, "order_id":order_id})
+    verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses, "order_id":order_id})
+    suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses, "order_id":order_id})
     fraud_thread.start()
     verif_thread.start()
     suggestion_thread.start()
@@ -150,7 +167,7 @@ def checkout():
     # Dummy response following the provided YAML specification for the bookstore
     order_status_response = {
         'orderId': order_id,
-        'status': 'Order Approved' if decision else 'Fraud detected' if trans_verif else "Incorrect transaction details (credit card number, name etc)",
+        'status': 'Fraud detected' if decision else ("Incorrect transaction details (credit card number, name etc)" if trans_verif else "Order accepted"),
         'suggestedBooks': suggestions
     }
 

@@ -29,6 +29,11 @@ class HelloServiceStub(object):
                 request_serializer=fraud__detection__pb2.VectorClockInp_fraud.SerializeToString,
                 response_deserializer=fraud__detection__pb2.Empty_fraud.FromString,
                 )
+        self.Kill = channel.unary_unary(
+                '/hello.HelloService/Kill',
+                request_serializer=fraud__detection__pb2.KillOrder_fraud.SerializeToString,
+                response_deserializer=fraud__detection__pb2.Empty_fraud.FromString,
+                )
 
 
 class HelloServiceServicer(object):
@@ -52,6 +57,12 @@ class HelloServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Kill(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_HelloServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -68,6 +79,11 @@ def add_HelloServiceServicer_to_server(servicer, server):
             'VectorClockUpdate': grpc.unary_unary_rpc_method_handler(
                     servicer.VectorClockUpdate,
                     request_deserializer=fraud__detection__pb2.VectorClockInp_fraud.FromString,
+                    response_serializer=fraud__detection__pb2.Empty_fraud.SerializeToString,
+            ),
+            'Kill': grpc.unary_unary_rpc_method_handler(
+                    servicer.Kill,
+                    request_deserializer=fraud__detection__pb2.KillOrder_fraud.FromString,
                     response_serializer=fraud__detection__pb2.Empty_fraud.SerializeToString,
             ),
     }
@@ -127,6 +143,23 @@ class HelloService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/hello.HelloService/VectorClockUpdate',
             fraud__detection__pb2.VectorClockInp_fraud.SerializeToString,
+            fraud__detection__pb2.Empty_fraud.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Kill(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hello.HelloService/Kill',
+            fraud__detection__pb2.KillOrder_fraud.SerializeToString,
             fraud__detection__pb2.Empty_fraud.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -5,12 +5,18 @@ package hello;
 service SuggestionsService {
     rpc Suggest (SuggestionRequest) returns (SuggestionResponse);
     rpc VectorClockUpdate (VectorClockInp_sugg) returns (Empty_sugg);
+    rpc Kill (KillOrder_sugg) returns (Empty_sugg);
+}
+
+message KillOrder_sugg {
+    int64 order_id = 1;
 }
 
 message Empty_sugg {}
 
 message VectorClockInp_sugg {
     repeated int32 vector_clock = 1;
+    int64 order_id = 2;
 }
 
 message Book {
@@ -22,6 +28,7 @@ message Book {
 message SuggestionRequest {
     repeated Book books = 1;
     repeated string ordered = 2;
+    int64 order_id = 3;
 }
 
 message SuggestionResponse {
