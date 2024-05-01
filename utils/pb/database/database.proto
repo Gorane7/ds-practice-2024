@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package hello;
+
+service Database {
+    rpc Read (ReadRequest) returns (ReadResponse);
+    rpc Write (WriteRequest) returns (WriteResponse);
+    rpc Lock (LockRequest) returns (LockResponse);
+    rpc Release (ReleaseRequest) returns (ReleaseResponse);
+}
+
+message ReadRequest {
+    int32 field = 1;
+}
+
+message ReadResponse {
+    int32 value = 1;
+}
+
+message WriteRequest {
+    int32 field = 1;
+    int32 value = 2;
+    bool fresh = 3;
+}
+
+message WriteResponse {
+}
+
+message LockRequest {
+    int32 field = 1;
+    bool preliminary = 2;
+    float lock_id = 3;
+}
+message LockResponse {
+    bool ok = 1;
+}
+message ReleaseRequest {
+    int32 field = 1;
+}
+message ReleaseResponse {
+}

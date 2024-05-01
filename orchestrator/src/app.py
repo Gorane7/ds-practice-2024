@@ -21,6 +21,9 @@ sys.path.insert(0, utils_path3)
 utils_path4 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_queue'))
 sys.path.insert(0, utils_path4)
 
+utils_path5 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/database'))
+sys.path.insert(0, utils_path5)
+
 import fraud_detection_pb2 as fraud_detection
 import fraud_detection_pb2_grpc as fraud_detection_grpc
 
@@ -32,6 +35,9 @@ import suggestions_service_pb2_grpc as suggestions_service_grpc
 
 import order_queue_pb2 as order_queue
 import order_queue_pb2_grpc as order_queue_grpc
+
+import database_pb2 as database
+import database_pb2_grpc as database_grpc
 
 import grpc
 
@@ -101,6 +107,25 @@ def enqueue_order(books=[], resp={}):
         response = stub.Enqueue(order_queue.EnqueueRequest(booknames=books))
     resp["enqueue"] = response.success
 
+def query_db(book_id, resp={}):
+    # pick random database instance to balance the load somewhat evenly
+    db_id = random.randint(0,3)
+    with grpc.insecure_channel(f'database:{50105+db_id}') as channel:
+        # Create a stub object.
+        stub = database_grpc.DatabaseStub(channel)
+        # Call the service through the stub object.
+        response = stub.Read(database.ReadRequest(field=book_id))
+    return response.value
+    
+def update_db(book_id, value, resp={}):
+    # pick random database instance to balance the load somewhat evenly
+    db_id = random.randint(0,3)
+    with grpc.insecure_channel(f'database:{50105+db_id}') as channel:
+        # Create a stub object.
+        stub = database_grpc.DatabaseStub(channel)
+        # Call the service through the stub object.
+        response = stub.Write(database.WriteRequest(field=book_id, value=value, fresh=True))
+
 # Import Flask.
 # Flask is a web framework for Python.
 # It allows you to build a web application quickly.
@@ -158,6 +183,12 @@ def checkout():
 
     print(f"Fraud decision: {decision}")
     print(f"Transaction verification: {trans_verif}")
+
+    for book in request.json["items"]:
+        book_stock = query_db(book["bookId"])
+        print(f"There are {book_stock} copies of the book {book['name']} remaining")
+        # might want to do something here if stock is 0
+        update_db(book["bookId"], book_stock-1)
 
     if not decision and not trans_verif:
         enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})
