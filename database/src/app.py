@@ -167,11 +167,11 @@ class Database(database_grpc.DatabaseServicer):
     def Lock(self, request, context):
         field = request.field
         if field in self.lock:
-            if self.lock[field] > request.lock_id:
+            if self.lock[field] < request.lock_id:
                 return database.LockResponse(ok=False, other_id=self.lock[field])
             else:
                 while field in self.lock:
-                    if self.lock[field] > request.lock_id:
+                    if self.lock[field] < request.lock_id:
                         return database.LockResponse(ok=False, other_id=self.lock[field])
                     time.sleep(0.01)
         self.lock[field] = request.lock_id
