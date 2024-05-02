@@ -7,8 +7,8 @@ DESCRIPTOR: _descriptor.FileDescriptor
 class ReadRequest(_message.Message):
     __slots__ = ("field",)
     FIELD_FIELD_NUMBER: _ClassVar[int]
-    field: int
-    def __init__(self, field: _Optional[int] = ...) -> None: ...
+    field: str
+    def __init__(self, field: _Optional[str] = ...) -> None: ...
 
 class ReadResponse(_message.Message):
     __slots__ = ("value",)
@@ -21,10 +21,10 @@ class WriteRequest(_message.Message):
     FIELD_FIELD_NUMBER: _ClassVar[int]
     VALUE_FIELD_NUMBER: _ClassVar[int]
     FRESH_FIELD_NUMBER: _ClassVar[int]
-    field: int
+    field: str
     value: int
     fresh: bool
-    def __init__(self, field: _Optional[int] = ..., value: _Optional[int] = ..., fresh: bool = ...) -> None: ...
+    def __init__(self, field: _Optional[str] = ..., value: _Optional[int] = ..., fresh: bool = ...) -> None: ...
 
 class WriteResponse(_message.Message):
     __slots__ = ()
@@ -34,9 +34,9 @@ class LockRequest(_message.Message):
     __slots__ = ("field", "lock_id")
     FIELD_FIELD_NUMBER: _ClassVar[int]
     LOCK_ID_FIELD_NUMBER: _ClassVar[int]
-    field: int
+    field: str
     lock_id: float
-    def __init__(self, field: _Optional[int] = ..., lock_id: _Optional[float] = ...) -> None: ...
+    def __init__(self, field: _Optional[str] = ..., lock_id: _Optional[float] = ...) -> None: ...
 
 class LockResponse(_message.Message):
     __slots__ = ("ok", "other_id")
@@ -50,9 +50,9 @@ class ReleaseRequest(_message.Message):
     __slots__ = ("field", "lock_id")
     FIELD_FIELD_NUMBER: _ClassVar[int]
     LOCK_ID_FIELD_NUMBER: _ClassVar[int]
-    field: int
+    field: str
     lock_id: float
-    def __init__(self, field: _Optional[int] = ..., lock_id: _Optional[float] = ...) -> None: ...
+    def __init__(self, field: _Optional[str] = ..., lock_id: _Optional[float] = ...) -> None: ...
 
 class ReleaseResponse(_message.Message):
     __slots__ = ()

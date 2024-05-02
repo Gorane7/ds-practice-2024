@@ -15,14 +15,40 @@ sys.path.insert(0, utils_path)
 utils_path1 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_executor'))
 sys.path.insert(0, utils_path1)
 
+utils_path2 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/database'))
+sys.path.insert(0, utils_path2)
+
 import order_queue_pb2 as order_queue
 import order_queue_pb2_grpc as order_queue_grpc
 
 import order_executor_pb2 as order_executor
 import order_executor_pb2_grpc as order_executor_grpc
 
+import database_pb2 as database
+import database_pb2_grpc as database_grpc
+
 import grpc
 from concurrent import futures
+
+
+def query_db(book_id, resp={}):
+    # pick random database instance to balance the load somewhat evenly
+    db_id = random.randint(0,3)
+    with grpc.insecure_channel(f'database_{db_id}:{50105+db_id}') as channel:
+        # Create a stub object.
+        stub = database_grpc.DatabaseStub(channel)
+        # Call the service through the stub object.
+        response = stub.Read(database.ReadRequest(field=book_id))
+    return response.value
+    
+def update_db(book_id, value, resp={}):
+    # pick random database instance to balance the load somewhat evenly
+    db_id = random.randint(0,3)
+    with grpc.insecure_channel(f'database_{db_id}:{50105+db_id}') as channel:
+        # Create a stub object.
+        stub = database_grpc.DatabaseStub(channel)
+        # Call the service through the stub object.
+        response = stub.Write(database.WriteRequest(field=book_id, value=value, fresh=True))
 
 
 # Create a class to define the server functions, derived from
@@ -52,6 +78,10 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
         # TODO: If executor starts before queue, then it crashes currently
     
     def send_periodic_request(self):
+        # Wait for others to wake up
+        time.sleep(5)
+        self.last_token_seen = time.time()
+        
         while True:
             if self.operational:
                 if random.random() < 0: #0.01:
@@ -84,13 +114,20 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
     def process_request(self, booknames):
         self.busy = True
         print(f"Starting processing of {booknames}")
-        time.sleep(self.process_time * (1.5 - random.random()))
+        
+        for book in booknames:
+            book_stock = query_db(book)
+            print(f"There are {book_stock} copies of the book {book} remaining")
+            # might want to do something here if stock is 0
+            # We might want to fail the commit in that case
+            update_db(book, book_stock - 1)
+        
         print(f"Finished processing of {booknames}")
         self.busy = False
     
     def send_token(self, remote_id):
+        #print(f"{self.id} sending token to {remote_id}")
         self.token = False
-        #print(f"Sending away token to {remote_id}")
         try:
             with grpc.insecure_channel(f"order_executor_{remote_id}:{50100 + remote_id}") as channel:
                 stub = order_executor_grpc.OrderExecutorStub(channel)

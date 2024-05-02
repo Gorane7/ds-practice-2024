@@ -25,7 +25,12 @@ class Database(database_grpc.DatabaseServicer):
     def __init__(self):
         self.id = int(os.environ['CONTAINER_ID'])
         self.process_amount = int(os.environ['PROCESS_AMOUNT'])
-        self.db = {1:4, 2:2} # number of books in stock per book id
+        self.db = {
+            "Learning Python": 4, 
+            "JavaScript - The Good Parts": 2,
+            "Domain-Driven Design: Tackling Complexity in the Heart of Software": 10,
+            "Design Patterns: Elements of Reusable Object-Oriented Software": 5
+        } # number of books in stock per book id
         self.lock = {}
 
     def propagate(self, request, method, crash_on_failure = False):

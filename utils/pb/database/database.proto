@@ -10,7 +10,7 @@ service Database {
 }
 
 message ReadRequest {
-    int32 field = 1;
+    string field = 1;
 }
 
 message ReadResponse {
@@ -18,7 +18,7 @@ message ReadResponse {
 }
 
 message WriteRequest {
-    int32 field = 1;
+    string field = 1;
     int32 value = 2;
     bool fresh = 3;
 }
@@ -27,7 +27,7 @@ message WriteResponse {
 }
 
 message LockRequest {
-    int32 field = 1;
+    string field = 1;
     float lock_id = 2;
 }
 message LockResponse {
@@ -35,7 +35,7 @@ message LockResponse {
     float other_id = 2;
 }
 message ReleaseRequest {
-    int32 field = 1;
+    string field = 1;
     float lock_id = 2;
 }
 message ReleaseResponse {
