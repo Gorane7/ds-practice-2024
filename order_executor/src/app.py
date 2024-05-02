@@ -33,21 +33,23 @@ from concurrent import futures
 
 def query_db(book_id, resp={}):
     # pick random database instance to balance the load somewhat evenly
-    db_id = random.randint(0,3)
+    db_id = random.randint(0, 2)
     with grpc.insecure_channel(f'database_{db_id}:{50105+db_id}') as channel:
         # Create a stub object.
         stub = database_grpc.DatabaseStub(channel)
         # Call the service through the stub object.
+        print(f"Attempting to read from db {db_id}")
         response = stub.Read(database.ReadRequest(field=book_id))
     return response.value
     
 def update_db(book_id, value, resp={}):
     # pick random database instance to balance the load somewhat evenly
-    db_id = random.randint(0,3)
+    db_id = random.randint(0, 2)
     with grpc.insecure_channel(f'database_{db_id}:{50105+db_id}') as channel:
         # Create a stub object.
         stub = database_grpc.DatabaseStub(channel)
         # Call the service through the stub object.
+        print(f"Attempting to write to db {db_id}")
         response = stub.Write(database.WriteRequest(field=book_id, value=value, fresh=True))
 
 
@@ -114,6 +116,7 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
     def process_request(self, booknames):
         self.busy = True
         print(f"Starting processing of {booknames}")
+        
         
         for book in booknames:
             book_stock = query_db(book)

@@ -67,18 +67,21 @@ class Database(database_grpc.DatabaseServicer):
             done = 0
             while not done:
                 self.lock[field] = lock_id
+                print(f"Locked field {field} with {lock_id} because of Write")
                 r = self.propagate(database.LockRequest(field=field, lock_id=lock_id), "lock", crash_on_failure=True)
                 if r:
                     self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
                     self.lock.pop(field)
+                    print(f"Released field {field} from Write")
                 else:
                     done = 1
 
             self.db[request.field] = request.value
             request.fresh = False
             self.propagate(request, "write")
-            self.propagate(database.ReleaseRequest(field=field), "release")
+            self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
             self.lock.pop(field)
+            print(f"Released field {field} from Write")
         else:
             self.db[request.field] = request.value
         return database.WriteResponse()
@@ -92,11 +95,13 @@ class Database(database_grpc.DatabaseServicer):
                 while field in self.lock:
                     time.sleep(0.01)
         self.lock[field] = request.lock_id
+        print(f"Locked field {field} with {request.lock_id} because of Lock")
         return database.LockResponse(ok=True, other_id=-1)
 
     def Release(self, request, context):
         if request.field in self.lock and self.lock[request.field] == request.lock_id:
             self.lock.pop(request.field)
+            print(f"Released field {request.field} from Release")
         return database.ReleaseResponse()
 
 
