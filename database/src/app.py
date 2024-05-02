@@ -73,6 +73,8 @@ class Database(database_grpc.DatabaseServicer):
 
         lock_id = int(time.time() * 1000)
         while True:
+            while field in self.lock:
+                time.sleep(0.01)
             self.lock[field] = lock_id
             print(f"Locked field {field} with {lock_id} because of Write")
             if self.propagate(database.LockRequest(field=field, lock_id=lock_id), "lock", crash_on_failure=True):
@@ -168,8 +170,9 @@ class Database(database_grpc.DatabaseServicer):
             if self.lock[field] > request.lock_id:
                 return database.LockResponse(ok=False, other_id=self.lock[field])
             else:
-                # What happens if 2 locks become queued
                 while field in self.lock:
+                    if self.lock[field] > request.lock_id:
+                        return database.LockResponse(ok=False, other_id=self.lock[field])
                     time.sleep(0.01)
         self.lock[field] = request.lock_id
         print(f"Locked field {field} with {request.lock_id} because of Lock")
