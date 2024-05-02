@@ -110,7 +110,7 @@ def enqueue_order(books=[], resp={}):
 def query_db(book_id, resp={}):
     # pick random database instance to balance the load somewhat evenly
     db_id = random.randint(0,3)
-    with grpc.insecure_channel(f'database:{50105+db_id}') as channel:
+    with grpc.insecure_channel(f'database_{db_id}:{50105+db_id}') as channel:
         # Create a stub object.
         stub = database_grpc.DatabaseStub(channel)
         # Call the service through the stub object.
@@ -120,7 +120,7 @@ def query_db(book_id, resp={}):
 def update_db(book_id, value, resp={}):
     # pick random database instance to balance the load somewhat evenly
     db_id = random.randint(0,3)
-    with grpc.insecure_channel(f'database:{50105+db_id}') as channel:
+    with grpc.insecure_channel(f'database_{db_id}:{50105+db_id}') as channel:
         # Create a stub object.
         stub = database_grpc.DatabaseStub(channel)
         # Call the service through the stub object.
@@ -167,6 +167,8 @@ def checkout():
     book_names = [x["name"] for x in request.json["items"]]
     
     responses = {}
+
+    '''
     fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "req":request.json, "resp": responses, "order_id":order_id})
     verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses, "order_id":order_id})
     suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses, "order_id":order_id})
@@ -176,19 +178,20 @@ def checkout():
     fraud_thread.join()
     verif_thread.join()
     suggestion_thread.join()
+    '''
 
-    decision = responses["fraud"]
-    trans_verif = responses["verif"]
-    suggestions = responses["suggestions"]
+    decision = 0# responses["fraud"]
+    trans_verif = 0# responses["verif"]
+    suggestions = ""# responses["suggestions"]
 
     print(f"Fraud decision: {decision}")
     print(f"Transaction verification: {trans_verif}")
 
     for book in request.json["items"]:
-        book_stock = query_db(book["bookId"])
+        book_stock = query_db(book["quantity"]) #TODO: replace this with book name
         print(f"There are {book_stock} copies of the book {book['name']} remaining")
         # might want to do something here if stock is 0
-        update_db(book["bookId"], book_stock-1)
+        update_db(book["quantity"], book_stock-1) #TODO here as well
 
     if not decision and not trans_verif:
         enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})

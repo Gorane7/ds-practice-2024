@@ -26,14 +26,13 @@ class Database(database_grpc.DatabaseServicer):
         self.id = int(os.environ['CONTAINER_ID'])
         self.process_amount = int(os.environ['PROCESS_AMOUNT'])
         self.db = {1:4, 2:2} # number of books in stock per book id
-        self.lock = set()
-        self.prelock = {}
+        self.lock = {}
 
     def propagate(self, request, method, crash_on_failure = False):
         peers = set(range(1,self.process_amount))
         while peers:
             for peer in peers.copy():
-                with grpc.insecure_channel(f'database:{50105+((self.id+peer)%self.process_amount)}') as channel:
+                with grpc.insecure_channel(f'database_{(self.id+peer)%self.process_amount}:{50105+((self.id+peer)%self.process_amount)}') as channel:
                     stub = database_grpc.DatabaseStub(channel)
                     success = True
                     if method == "write":
@@ -46,12 +45,12 @@ class Database(database_grpc.DatabaseServicer):
                     if success:
                         peers.remove(peer)
                     elif crash_on_failure:
-                        return 1
+                        return resp.other_id
         return 0
 
     def Read(self, request, context):
         field = request.field
-        while field in self.lock or field in self.prelock:
+        while field in self.lock:
             time.sleep(0.01)
         response = database.ReadResponse(value=self.db[field])
         return response
@@ -60,53 +59,39 @@ class Database(database_grpc.DatabaseServicer):
         field = request.field
         if request.fresh:
             lock_id = time.time()
-            res = 1
-            while res:
-                while field in self.lock or field in self.prelock:
-                    time.sleep(0.01)
-                self.prelock[field] = lock_id
-                self.propagate(database.LockRequest(field=field, preliminary=True, lock_id=lock_id), "lock")
-                if self.prelock[field] < lock_id:
-                    # prelock was stolen by more important process
-                    continue
-                elif self.prelock[field] > lock_id:
-                    # prelock was stolen by an underling
-                    self.prelock[field] = lock_id
-                res = self.propagate(database.LockRequest(field=field, preliminary=False, lock_id=lock_id), "lock", crash_on_failure=True)
-            self.lock.add(field)
+            done = 0
+            while not done:
+                self.lock[field] = lock_id
+                r = self.propagate(database.LockRequest(field=field, lock_id=lock_id), "lock", crash_on_failure=True)
+                if r:
+                    self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
+                    self.lock.pop(field)
+                else:
+                    done = 1
+
             self.db[request.field] = request.value
             request.fresh = False
             self.propagate(request, "write")
             self.propagate(database.ReleaseRequest(field=field), "release")
-            self.lock.remove(field)
+            self.lock.pop(field)
         else:
             self.db[request.field] = request.value
         return database.WriteResponse()
 
     def Lock(self, request, context):
         field = request.field
-        pre = request.preliminary
-        if pre:
-            if field in self.prelock:
-                if self.prelock[field] > request.lock_id:
-                    self.prelock[field] = request.lock_id
-                    return database.LockResponse(ok=True)
-                else:
-                    return database.LockResponse(ok=False)
+        if field in self.lock:
+            if self.lock[field] > request.lock_id:
+                return database.LockResponse(ok=False, other_id=self.lock[field])
             else:
-                self.prelock[field] = request.lock_id
-                return database.LockResponse(ok=True)
-        else:
-            if field in self.prelock and self.prelock[field] == request.lock_id:
-                self.lock.add(field)
-                return database.LockResponse(ok=True)
-            else:
-                # different higher priority lock has taken this prelocks place
-                return database.LockResponse(ok=False)
+                while field in self.lock:
+                    time.sleep(0.01)
+        self.lock[field] = request.lock_id
+        return database.LockResponse(ok=True, other_id=-1)
 
     def Release(self, request, context):
-        self.lock.remove(request.field)
-        self.prelock.remove(request.field)
+        if request.field in self.lock and self.lock[request.field] == request.lock_id:
+            self.lock.pop(request.field)
         return database.ReleaseResponse()
 
 

@@ -31,26 +31,28 @@ class WriteResponse(_message.Message):
     def __init__(self) -> None: ...
 
 class LockRequest(_message.Message):
-    __slots__ = ("field", "preliminary", "lock_id")
+    __slots__ = ("field", "lock_id")
     FIELD_FIELD_NUMBER: _ClassVar[int]
-    PRELIMINARY_FIELD_NUMBER: _ClassVar[int]
     LOCK_ID_FIELD_NUMBER: _ClassVar[int]
     field: int
-    preliminary: bool
     lock_id: float
-    def __init__(self, field: _Optional[int] = ..., preliminary: bool = ..., lock_id: _Optional[float] = ...) -> None: ...
+    def __init__(self, field: _Optional[int] = ..., lock_id: _Optional[float] = ...) -> None: ...
 
 class LockResponse(_message.Message):
-    __slots__ = ("ok",)
+    __slots__ = ("ok", "other_id")
     OK_FIELD_NUMBER: _ClassVar[int]
+    OTHER_ID_FIELD_NUMBER: _ClassVar[int]
     ok: bool
-    def __init__(self, ok: bool = ...) -> None: ...
+    other_id: float
+    def __init__(self, ok: bool = ..., other_id: _Optional[float] = ...) -> None: ...
 
 class ReleaseRequest(_message.Message):
-    __slots__ = ("field",)
+    __slots__ = ("field", "lock_id")
     FIELD_FIELD_NUMBER: _ClassVar[int]
+    LOCK_ID_FIELD_NUMBER: _ClassVar[int]
     field: int
-    def __init__(self, field: _Optional[int] = ...) -> None: ...
+    lock_id: float
+    def __init__(self, field: _Optional[int] = ..., lock_id: _Optional[float] = ...) -> None: ...
 
 class ReleaseResponse(_message.Message):
     __slots__ = ()

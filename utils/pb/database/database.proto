@@ -28,14 +28,15 @@ message WriteResponse {
 
 message LockRequest {
     int32 field = 1;
-    bool preliminary = 2;
-    float lock_id = 3;
+    float lock_id = 2;
 }
 message LockResponse {
     bool ok = 1;
+    float other_id = 2;
 }
 message ReleaseRequest {
     int32 field = 1;
+    float lock_id = 2;
 }
 message ReleaseResponse {
 }

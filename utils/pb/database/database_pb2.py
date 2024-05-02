@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x64\x61tabase.proto\x12\x05hello\"\x1c\n\x0bReadRequest\x12\r\n\x05\x66ield\x18\x01 \x01(\x05\"\x1d\n\x0cReadResponse\x12\r\n\x05value\x18\x01 \x01(\x05\";\n\x0cWriteRequest\x12\r\n\x05\x66ield\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\x05\x12\r\n\x05\x66resh\x18\x03 \x01(\x08\"\x0f\n\rWriteResponse\"B\n\x0bLockRequest\x12\r\n\x05\x66ield\x18\x01 \x01(\x05\x12\x13\n\x0bpreliminary\x18\x02 \x01(\x08\x12\x0f\n\x07lock_id\x18\x03 \x01(\x02\"\x1a\n\x0cLockResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\"\x1f\n\x0eReleaseRequest\x12\r\n\x05\x66ield\x18\x01 \x01(\x05\"\x11\n\x0fReleaseResponse2\xda\x01\n\x08\x44\x61tabase\x12/\n\x04Read\x12\x12.hello.ReadRequest\x1a\x13.hello.ReadResponse\x12\x32\n\x05Write\x12\x13.hello.WriteRequest\x1a\x14.hello.WriteResponse\x12/\n\x04Lock\x12\x12.hello.LockRequest\x1a\x13.hello.LockResponse\x12\x38\n\x07Release\x12\x15.hello.ReleaseRequest\x1a\x16.hello.ReleaseResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x64\x61tabase.proto\x12\x05hello\"\x1c\n\x0bReadRequest\x12\r\n\x05\x66ield\x18\x01 \x01(\x05\"\x1d\n\x0cReadResponse\x12\r\n\x05value\x18\x01 \x01(\x05\";\n\x0cWriteRequest\x12\r\n\x05\x66ield\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\x05\x12\r\n\x05\x66resh\x18\x03 \x01(\x08\"\x0f\n\rWriteResponse\"-\n\x0bLockRequest\x12\r\n\x05\x66ield\x18\x01 \x01(\x05\x12\x0f\n\x07lock_id\x18\x02 \x01(\x02\",\n\x0cLockResponse\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x10\n\x08other_id\x18\x02 \x01(\x02\"0\n\x0eReleaseRequest\x12\r\n\x05\x66ield\x18\x01 \x01(\x05\x12\x0f\n\x07lock_id\x18\x02 \x01(\x02\"\x11\n\x0fReleaseResponse2\xda\x01\n\x08\x44\x61tabase\x12/\n\x04Read\x12\x12.hello.ReadRequest\x1a\x13.hello.ReadResponse\x12\x32\n\x05Write\x12\x13.hello.WriteRequest\x1a\x14.hello.WriteResponse\x12/\n\x04Lock\x12\x12.hello.LockRequest\x1a\x13.hello.LockResponse\x12\x38\n\x07Release\x12\x15.hello.ReleaseRequest\x1a\x16.hello.ReleaseResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -30,13 +30,13 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_WRITERESPONSE']._serialized_start=147
   _globals['_WRITERESPONSE']._serialized_end=162
   _globals['_LOCKREQUEST']._serialized_start=164
-  _globals['_LOCKREQUEST']._serialized_end=230
-  _globals['_LOCKRESPONSE']._serialized_start=232
-  _globals['_LOCKRESPONSE']._serialized_end=258
-  _globals['_RELEASEREQUEST']._serialized_start=260
-  _globals['_RELEASEREQUEST']._serialized_end=291
-  _globals['_RELEASERESPONSE']._serialized_start=293
-  _globals['_RELEASERESPONSE']._serialized_end=310
-  _globals['_DATABASE']._serialized_start=313
-  _globals['_DATABASE']._serialized_end=531
+  _globals['_LOCKREQUEST']._serialized_end=209
+  _globals['_LOCKRESPONSE']._serialized_start=211
+  _globals['_LOCKRESPONSE']._serialized_end=255
+  _globals['_RELEASEREQUEST']._serialized_start=257
+  _globals['_RELEASEREQUEST']._serialized_end=305
+  _globals['_RELEASERESPONSE']._serialized_start=307
+  _globals['_RELEASERESPONSE']._serialized_end=324
+  _globals['_DATABASE']._serialized_start=327
+  _globals['_DATABASE']._serialized_end=545
 # @@protoc_insertion_point(module_scope)

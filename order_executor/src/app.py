@@ -54,7 +54,7 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
     def send_periodic_request(self):
         while True:
             if self.operational:
-                if random.random() < 0.01:
+                if random.random() < 0: #0.01:
                     self.operational = False
                     print(f"ERROR: Crash and burn")
             else:
