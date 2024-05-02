@@ -5,6 +5,7 @@ package hello;
 service Database {
     rpc Read (ReadRequest) returns (ReadResponse);
     rpc Write (WriteRequest) returns (WriteResponse);
+    rpc Modify (ModifyRequest) returns (ModifyResponse);
     rpc Lock (LockRequest) returns (LockResponse);
     rpc Release (ReleaseRequest) returns (ReleaseResponse);
 }
@@ -26,17 +27,27 @@ message WriteRequest {
 message WriteResponse {
 }
 
+message ModifyRequest {
+    string fied = 1;
+    int32 value = 2;
+    bool fresh = 3;
+}
+
+message ModifyResponse {
+    
+}
+
 message LockRequest {
     string field = 1;
-    float lock_id = 2;
+    int64 lock_id = 2;
 }
 message LockResponse {
     bool ok = 1;
-    float other_id = 2;
+    int64 other_id = 2;
 }
 message ReleaseRequest {
     string field = 1;
-    float lock_id = 2;
+    int64 lock_id = 2;
 }
 message ReleaseResponse {
 }

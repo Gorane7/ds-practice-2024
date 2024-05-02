@@ -24,6 +24,11 @@ class DatabaseStub(object):
                 request_serializer=database__pb2.WriteRequest.SerializeToString,
                 response_deserializer=database__pb2.WriteResponse.FromString,
                 )
+        self.Modify = channel.unary_unary(
+                '/hello.Database/Modify',
+                request_serializer=database__pb2.ModifyRequest.SerializeToString,
+                response_deserializer=database__pb2.ModifyResponse.FromString,
+                )
         self.Lock = channel.unary_unary(
                 '/hello.Database/Lock',
                 request_serializer=database__pb2.LockRequest.SerializeToString,
@@ -46,6 +51,12 @@ class DatabaseServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def Write(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Modify(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -75,6 +86,11 @@ def add_DatabaseServicer_to_server(servicer, server):
                     servicer.Write,
                     request_deserializer=database__pb2.WriteRequest.FromString,
                     response_serializer=database__pb2.WriteResponse.SerializeToString,
+            ),
+            'Modify': grpc.unary_unary_rpc_method_handler(
+                    servicer.Modify,
+                    request_deserializer=database__pb2.ModifyRequest.FromString,
+                    response_serializer=database__pb2.ModifyResponse.SerializeToString,
             ),
             'Lock': grpc.unary_unary_rpc_method_handler(
                     servicer.Lock,
@@ -127,6 +143,23 @@ class Database(object):
         return grpc.experimental.unary_unary(request, target, '/hello.Database/Write',
             database__pb2.WriteRequest.SerializeToString,
             database__pb2.WriteResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Modify(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hello.Database/Modify',
+            database__pb2.ModifyRequest.SerializeToString,
+            database__pb2.ModifyResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

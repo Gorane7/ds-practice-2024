@@ -40,6 +40,7 @@ class Database(database_grpc.DatabaseServicer):
                 with grpc.insecure_channel(f'database_{(self.id+peer)%self.process_amount}:{50105+((self.id+peer)%self.process_amount)}') as channel:
                     stub = database_grpc.DatabaseStub(channel)
                     success = True
+                    
                     if method == "write":
                         stub.Write(request)
                     elif method == "lock":
@@ -47,11 +48,14 @@ class Database(database_grpc.DatabaseServicer):
                         success = resp.ok
                     elif method == "release":
                         stub.Release(request)
+                    elif method == "modify":
+                        stub.Modify(request)
+                        
                     if success:
                         peers.remove(peer)
                     elif crash_on_failure:
-                        return resp.other_id
-        return 0
+                        return False
+        return True
 
     def Read(self, request, context):
         field = request.field
@@ -62,29 +66,59 @@ class Database(database_grpc.DatabaseServicer):
     
     def Write(self, request, context):
         field = request.field
-        if request.fresh:
-            lock_id = time.time()
-            done = 0
-            while not done:
-                self.lock[field] = lock_id
-                print(f"Locked field {field} with {lock_id} because of Write")
-                r = self.propagate(database.LockRequest(field=field, lock_id=lock_id), "lock", crash_on_failure=True)
-                if r:
-                    self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
-                    self.lock.pop(field)
-                    print(f"Released field {field} from Write")
-                else:
-                    done = 1
+        if not request.fresh:
+            self.db[field] = request.value
+            return database.WriteResponse()
 
-            self.db[request.field] = request.value
-            request.fresh = False
-            self.propagate(request, "write")
+        lock_id = int(time.time() * 1000)
+        while True:
+            self.lock[field] = lock_id
+            print(f"Locked field {field} with {lock_id} because of Write")
+            if self.propagate(database.LockRequest(field=field, lock_id=lock_id), "lock", crash_on_failure=True):
+                break
+            
             self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
             self.lock.pop(field)
             print(f"Released field {field} from Write")
-        else:
-            self.db[request.field] = request.value
+            time.sleep(0.01)
+
+        self.db[field] = request.value
+        request.fresh = False
+        
+        self.propagate(request, "write")
+        self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
+        
+        self.lock.pop(field)
+        print(f"Released field {field} from Write")
         return database.WriteResponse()
+    
+    def Modify(self, request, context):
+        field = request.field
+        if not request.fresh:
+            self.db[field] += request.value
+            return database.ModifyResponse()
+
+        lock_id = int(time.time() * 1000)
+        while True:
+            self.lock[field] = lock_id
+            print(f"Locked field {field} with {lock_id} because of Modify")
+            if self.propagate(database.LockRequest(field=field, lock_id=lock_id), "lock", crash_on_failure=True):
+                break
+            
+            self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
+            self.lock.pop(field)
+            print(f"Released field {field} from Modify")
+            time.sleep(0.01)
+
+        self.db[field] += request.value
+        request.fresh = False
+        
+        self.propagate(request, "modify")
+        self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
+        
+        self.lock.pop(field)
+        print(f"Released field {field} from Modify")
+        return database.ModifyResponse()
 
     def Lock(self, request, context):
         field = request.field
@@ -92,6 +126,7 @@ class Database(database_grpc.DatabaseServicer):
             if self.lock[field] > request.lock_id:
                 return database.LockResponse(ok=False, other_id=self.lock[field])
             else:
+                # What happens if 2 locks become queued
                 while field in self.lock:
                     time.sleep(0.01)
         self.lock[field] = request.lock_id
