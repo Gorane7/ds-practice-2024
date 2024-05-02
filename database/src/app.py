@@ -31,6 +31,7 @@ class Database(database_grpc.DatabaseServicer):
             "Domain-Driven Design: Tackling Complexity in the Heart of Software": 10,
             "Design Patterns: Elements of Reusable Object-Oriented Software": 5
         } # number of books in stock per book id
+        self.modifications = {}
         self.lock = {}
 
     def propagate(self, request, method, crash_on_failure = False):
@@ -96,7 +97,8 @@ class Database(database_grpc.DatabaseServicer):
         field = request.field
         if not request.fresh:
             self.db[field] += request.value
-            return database.ModifyResponse()
+            self.modifications[request.modify_id] = (field, request.value)
+            return database.ModifyResponse(success=True)
 
         lock_id = int(time.time() * 1000)
         while True:
@@ -111,6 +113,7 @@ class Database(database_grpc.DatabaseServicer):
             time.sleep(0.01)
 
         self.db[field] += request.value
+        self.modifications[request.modify_id] = (field, request.value)
         request.fresh = False
         
         self.propagate(request, "modify")
@@ -118,7 +121,46 @@ class Database(database_grpc.DatabaseServicer):
         
         self.lock.pop(field)
         print(f"Released field {field} from Modify")
-        return database.ModifyResponse()
+        return database.ModifyResponse(success=True)
+    
+    def ModifyCommit(self, request, context):
+        if not request.fresh:
+            if request.to_commit:
+                del self.modifications[request.modify_id]
+            else:
+                field, value = self.modifications[request.modify_id]
+                self.db[field] -= value
+                del self.modifications[request.modify_id]
+            return database.ModifyCommitResponse()
+        
+        if request.to_commit:
+            del self.modifications[request.modify_id]
+            self.propagate(database.ModifyCommitRequest(to_commit=True, modify_id=request.modify_id, fresh=False))
+            return database.ModifyCommitResponse()
+        
+        field, value = self.modifications[request.modify_id]
+        lock_id = int(time.time() * 1000)
+        while True:
+            self.lock[field] = lock_id
+            print(f"Locked field {field} with {lock_id} because of ModifyCommit rollback")
+            if self.propagate(database.LockRequest(field=field, lock_id=lock_id), "modify-commit", crash_on_failure=True):
+                break
+            
+            self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
+            self.lock.pop(field)
+            print(f"Released field {field} from ModifyCommit")
+            time.sleep(0.01)
+        
+        self.db[field] -= value
+        del self.modifications[request.modify_id]
+        request.fresh = False
+        
+        self.propagate(request, "modify-commit")
+        self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
+        
+        self.lock.pop(field)
+        print(f"Released field {field} from ModifyCommit")
+        return database.ModifyCommitResponse(success=True)
 
     def Lock(self, request, context):
         field = request.field

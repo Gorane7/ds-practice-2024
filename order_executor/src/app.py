@@ -18,6 +18,9 @@ sys.path.insert(0, utils_path1)
 utils_path2 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/database'))
 sys.path.insert(0, utils_path2)
 
+utils_path3 = os.path.abspath(os.path.join(FILE, '../../../utils/pb/payment_system'))
+sys.path.insert(0, utils_path3)
+
 import order_queue_pb2 as order_queue
 import order_queue_pb2_grpc as order_queue_grpc
 
@@ -26,6 +29,9 @@ import order_executor_pb2_grpc as order_executor_grpc
 
 import database_pb2 as database
 import database_pb2_grpc as database_grpc
+
+import payment_system_pb2 as payment_system
+import payment_system_pb2_grpc as payment_system_grpc
 
 import grpc
 from concurrent import futures
@@ -51,6 +57,47 @@ def update_db(book_id, value, resp={}):
         # Call the service through the stub object.
         print(f"Attempting to write to db {db_id}")
         response = stub.Write(database.WriteRequest(field=book_id, value=value, fresh=True))
+
+
+def pre_modify_db(book_id, delta, resp={}):
+    # pick random database instance to balance the load somewhat evenly
+    db_id = random.randint(0, 2)
+    with grpc.insecure_channel(f'database_{db_id}:{50105+db_id}') as channel:
+        # Create a stub object.
+        stub = database_grpc.DatabaseStub(channel)
+        # Call the service through the stub object.
+        print(f"Attempting to modify to db {db_id}")
+        modify_id = int(time.time() * 1000)
+        response = stub.Modify(database.ModifyRequest(field=book_id, value=delta, fresh=True, modify_id=modify_id))
+        return response, modify_id
+
+
+def commit_modify(success, modify_id):
+    # pick random database instance to balance the load somewhat evenly
+    db_id = random.randint(0, 2)
+    with grpc.insecure_channel(f'database_{db_id}:{50105+db_id}') as channel:
+        # Create a stub object.
+        stub = database_grpc.DatabaseStub(channel)
+        # Call the service through the stub object.
+        print(f"Attempting to commit to db {db_id} with status {success}")
+        response = stub.ModifyCommit(database.ModifyCommitRequest(modify_id=modify_id, to_commit=success))
+
+
+def pre_pay():
+    with grpc.insecure_channel(f"payment_system:50055") as channel:
+        stub = payment_system_grpc.PaymentSystemStub(channel)
+        credit_card = "1234123456785678"
+        price = random.randint(10, 150)
+        payment_id = int(time.time() * 1000)
+        print(f"Attempting pre pay {price} with {credit_card}")
+        response = stub.StartPayment(payment_system.PaymentRequest(payment_id=payment_id, amount=price, credit_card=credit_card))
+        return response, payment_id
+
+def commit_payment(success, payment_id):
+    with grpc.insecure_channel(f"payment_system:50055") as channel:
+        stub = payment_system_grpc.PaymentSystemStub(channel)
+        print(f"Confirming payment {payment_id} with result {success}")
+        response = stub.ConfirmPayment(payment_system.PaymentConfirmation(payment_id=payment_id, perform_payment=success))
 
 
 # Create a class to define the server functions, derived from
@@ -117,13 +164,20 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
         self.busy = True
         print(f"Starting processing of {booknames}")
         
-        
+        success = True
+        modify_ids = []
         for book in booknames:
-            book_stock = query_db(book)
-            print(f"There are {book_stock} copies of the book {book} remaining")
-            # might want to do something here if stock is 0
-            # We might want to fail the commit in that case
-            update_db(book, book_stock - 1)
+            modify_response, modify_id = pre_modify_db(book, -1)
+            print(f"Did pre-modify for {book} with delta -1, modify response {modify_response.success} and modify id {modify_id}")
+            success = success and modify_response.success
+            modify_ids.append(modify_id)
+        response, payment_id = pre_pay()
+        success = success and response.success
+        
+        for modify_id in modify_ids:
+            commit_modify(success, modify_id)
+            print(f"Did commit with modify id {modify_id} and status {success}")
+        commit_payment(success, payment_id)
         
         print(f"Finished processing of {booknames}")
         self.busy = False

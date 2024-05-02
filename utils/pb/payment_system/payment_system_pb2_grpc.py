@@ -5,7 +5,7 @@ import grpc
 import payment_system_pb2 as payment__system__pb2
 
 
-class PaymentSystemServiceStub(object):
+class PaymentSystemStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,18 +15,18 @@ class PaymentSystemServiceStub(object):
             channel: A grpc.Channel.
         """
         self.StartPayment = channel.unary_unary(
-                '/hello.PaymentSystemService/StartPayment',
+                '/hello.PaymentSystem/StartPayment',
                 request_serializer=payment__system__pb2.PaymentRequest.SerializeToString,
                 response_deserializer=payment__system__pb2.PaymentResponse.FromString,
                 )
         self.ConfirmPayment = channel.unary_unary(
-                '/hello.PaymentSystemService/ConfirmPayment',
+                '/hello.PaymentSystem/ConfirmPayment',
                 request_serializer=payment__system__pb2.PaymentConfirmation.SerializeToString,
                 response_deserializer=payment__system__pb2.PaymentResponse.FromString,
                 )
 
 
-class PaymentSystemServiceServicer(object):
+class PaymentSystemServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def StartPayment(self, request, context):
@@ -42,7 +42,7 @@ class PaymentSystemServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_PaymentSystemServiceServicer_to_server(servicer, server):
+def add_PaymentSystemServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'StartPayment': grpc.unary_unary_rpc_method_handler(
                     servicer.StartPayment,
@@ -56,12 +56,12 @@ def add_PaymentSystemServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'hello.PaymentSystemService', rpc_method_handlers)
+            'hello.PaymentSystem', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class PaymentSystemService(object):
+class PaymentSystem(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -75,7 +75,7 @@ class PaymentSystemService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/hello.PaymentSystemService/StartPayment',
+        return grpc.experimental.unary_unary(request, target, '/hello.PaymentSystem/StartPayment',
             payment__system__pb2.PaymentRequest.SerializeToString,
             payment__system__pb2.PaymentResponse.FromString,
             options, channel_credentials,
@@ -92,7 +92,7 @@ class PaymentSystemService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/hello.PaymentSystemService/ConfirmPayment',
+        return grpc.experimental.unary_unary(request, target, '/hello.PaymentSystem/ConfirmPayment',
             payment__system__pb2.PaymentConfirmation.SerializeToString,
             payment__system__pb2.PaymentResponse.FromString,
             options, channel_credentials,

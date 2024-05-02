@@ -29,6 +29,11 @@ class DatabaseStub(object):
                 request_serializer=database__pb2.ModifyRequest.SerializeToString,
                 response_deserializer=database__pb2.ModifyResponse.FromString,
                 )
+        self.ModifyCommit = channel.unary_unary(
+                '/hello.Database/ModifyCommit',
+                request_serializer=database__pb2.ModifyCommitRequest.SerializeToString,
+                response_deserializer=database__pb2.ModifyCommitResponse.FromString,
+                )
         self.Lock = channel.unary_unary(
                 '/hello.Database/Lock',
                 request_serializer=database__pb2.LockRequest.SerializeToString,
@@ -57,6 +62,12 @@ class DatabaseServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def Modify(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ModifyCommit(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -91,6 +102,11 @@ def add_DatabaseServicer_to_server(servicer, server):
                     servicer.Modify,
                     request_deserializer=database__pb2.ModifyRequest.FromString,
                     response_serializer=database__pb2.ModifyResponse.SerializeToString,
+            ),
+            'ModifyCommit': grpc.unary_unary_rpc_method_handler(
+                    servicer.ModifyCommit,
+                    request_deserializer=database__pb2.ModifyCommitRequest.FromString,
+                    response_serializer=database__pb2.ModifyCommitResponse.SerializeToString,
             ),
             'Lock': grpc.unary_unary_rpc_method_handler(
                     servicer.Lock,
@@ -160,6 +176,23 @@ class Database(object):
         return grpc.experimental.unary_unary(request, target, '/hello.Database/Modify',
             database__pb2.ModifyRequest.SerializeToString,
             database__pb2.ModifyResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ModifyCommit(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hello.Database/ModifyCommit',
+            database__pb2.ModifyCommitRequest.SerializeToString,
+            database__pb2.ModifyCommitResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

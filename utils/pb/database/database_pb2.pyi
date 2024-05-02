@@ -31,16 +31,34 @@ class WriteResponse(_message.Message):
     def __init__(self) -> None: ...
 
 class ModifyRequest(_message.Message):
-    __slots__ = ("fied", "value", "fresh")
-    FIED_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("field", "value", "fresh", "modify_id")
+    FIELD_FIELD_NUMBER: _ClassVar[int]
     VALUE_FIELD_NUMBER: _ClassVar[int]
     FRESH_FIELD_NUMBER: _ClassVar[int]
-    fied: str
+    MODIFY_ID_FIELD_NUMBER: _ClassVar[int]
+    field: str
     value: int
     fresh: bool
-    def __init__(self, fied: _Optional[str] = ..., value: _Optional[int] = ..., fresh: bool = ...) -> None: ...
+    modify_id: int
+    def __init__(self, field: _Optional[str] = ..., value: _Optional[int] = ..., fresh: bool = ..., modify_id: _Optional[int] = ...) -> None: ...
 
 class ModifyResponse(_message.Message):
+    __slots__ = ("success",)
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    success: bool
+    def __init__(self, success: bool = ...) -> None: ...
+
+class ModifyCommitRequest(_message.Message):
+    __slots__ = ("modify_id", "to_commit", "fresh")
+    MODIFY_ID_FIELD_NUMBER: _ClassVar[int]
+    TO_COMMIT_FIELD_NUMBER: _ClassVar[int]
+    FRESH_FIELD_NUMBER: _ClassVar[int]
+    modify_id: int
+    to_commit: bool
+    fresh: bool
+    def __init__(self, modify_id: _Optional[int] = ..., to_commit: bool = ..., fresh: bool = ...) -> None: ...
+
+class ModifyCommitResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 

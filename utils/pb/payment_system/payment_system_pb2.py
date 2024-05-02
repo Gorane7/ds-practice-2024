@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14payment_system.proto\x12\x05hello\"I\n\x0ePaymentRequest\x12\x12\n\npayment_id\x18\x01 \x01(\x03\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x03\x12\x13\n\x0b\x63redit_card\x18\x03 \x01(\x03\"\"\n\x0fPaymentResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"B\n\x13PaymentConfirmation\x12\x12\n\npayment_id\x18\x01 \x01(\x03\x12\x17\n\x0fperform_payment\x18\x02 \x01(\x08\x32\x9b\x01\n\x14PaymentSystemService\x12=\n\x0cStartPayment\x12\x15.hello.PaymentRequest\x1a\x16.hello.PaymentResponse\x12\x44\n\x0e\x43onfirmPayment\x12\x1a.hello.PaymentConfirmation\x1a\x16.hello.PaymentResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14payment_system.proto\x12\x05hello\"I\n\x0ePaymentRequest\x12\x12\n\npayment_id\x18\x01 \x01(\x03\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x03\x12\x13\n\x0b\x63redit_card\x18\x03 \x01(\t\"\"\n\x0fPaymentResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"B\n\x13PaymentConfirmation\x12\x12\n\npayment_id\x18\x01 \x01(\x03\x12\x17\n\x0fperform_payment\x18\x02 \x01(\x08\x32\x94\x01\n\rPaymentSystem\x12=\n\x0cStartPayment\x12\x15.hello.PaymentRequest\x1a\x16.hello.PaymentResponse\x12\x44\n\x0e\x43onfirmPayment\x12\x1a.hello.PaymentConfirmation\x1a\x16.hello.PaymentResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -27,6 +27,6 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_PAYMENTRESPONSE']._serialized_end=140
   _globals['_PAYMENTCONFIRMATION']._serialized_start=142
   _globals['_PAYMENTCONFIRMATION']._serialized_end=208
-  _globals['_PAYMENTSYSTEMSERVICE']._serialized_start=211
-  _globals['_PAYMENTSYSTEMSERVICE']._serialized_end=366
+  _globals['_PAYMENTSYSTEM']._serialized_start=211
+  _globals['_PAYMENTSYSTEM']._serialized_end=359
 # @@protoc_insertion_point(module_scope)

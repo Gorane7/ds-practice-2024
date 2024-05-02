@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package hello;
 
-service PaymentSystemService {
+service PaymentSystem {
     rpc StartPayment (PaymentRequest) returns (PaymentResponse);
     rpc ConfirmPayment (PaymentConfirmation) returns (PaymentResponse);
 }
@@ -10,7 +10,7 @@ service PaymentSystemService {
 message PaymentRequest {
     int64 payment_id = 1;
     int64 amount = 2;
-    int64 credit_card = 3;
+    string credit_card = 3;
 }
 
 message PaymentResponse {

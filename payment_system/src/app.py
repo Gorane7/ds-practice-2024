@@ -23,47 +23,53 @@ import payment_system_pb2 as payment_system
 import payment_system_pb2_grpc as payment_system_grpc
 
 # Create a class to define the server functions, derived from
-class PaymentSystemService(payment_system_grpc.PaymentSystemServiceServicer):
+class PaymentSystem(payment_system_grpc.PaymentSystemServicer):
     def __init__(self):
         self.to_commit = {}
     
     def StartPayment(self, request, context):
         if self.has_money(request.credit_card, request.amount):
-            reservation_id = self.reserve_money(request.credit_card, request.amount)
-            self.to_commit[request.payment_id] = (reservation_id, request.credit_card, request.amount)
-            print(f"Created reservation {reservation_id} for card {request.credit_card} equal to {request.amount} money")
+            self.reserve_money(request.credit_card, request.amount)
+            self.to_commit[request.payment_id] = (request.credit_card, request.amount)
+            print(f"Created reservation {request.payment_id} for card {request.credit_card} equal to {request.amount} money")
             return payment_system.PaymentResponse(success=True)
         print(f"Card {request.credit_card} did not have {request.amount} money, unable to create reservation")
         return payment_system.PaymentResponse(success=False)
     
     def ConfirmPayment(self, request, context):
-        reservation_id, credit_card, amount = self.to_commit[request.payment_id]
+        if request.payment_id not in self.to_commit.keys():
+            print(f"Never made reservation {request.payment_id}")
+            return payment_system.PaymentResponse(success=True)
+        
+        credit_card, amount = self.to_commit[request.payment_id]
         if request.perform_payment:
             self.make_payment(credit_card, amount)
         else:
             self.release_payment(credit_card, amount)
             
-        del self.to_commit[reservation_id]
-        print(f"Removed reservation {reservation_id}")
+        del self.to_commit[request.payment_id]
+        print(f"Removed reservation {request.payment_id}")
         
         return payment_system.PaymentResponse(success=True)
     
     def reserve_money(self, credit_card, amount):
         print(f"Reserving {amount} on {credit_card}")
-        return random.randint(0, 256**2)
     
     def make_payment(self, credit_card, amount):
         print(f"Making payment of {amount} from {credit_card}")
         
     def release_payment(self, credit_card, amount):
         print(f"Releasing payment of {amount} from {credit_card}")
+    
+    def has_money(self, credit_card, amount):
+        return sum([int(x) for x in str(credit_card)]) > amount
 
 
 def serve():
     # Create a gRPC server
     server = grpc.server(futures.ThreadPoolExecutor())
     # Add PaymentSystem
-    payment_system_grpc.add_PaymentSystemServiceServicer_to_server(PaymentSystemService(), server)
+    payment_system_grpc.add_PaymentSystemServicer_to_server(PaymentSystem(), server)
     # Listen on port 50055
     port = "50055"
     server.add_insecure_port("[::]:" + port)

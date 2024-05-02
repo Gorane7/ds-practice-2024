@@ -11,8 +11,8 @@ class PaymentRequest(_message.Message):
     CREDIT_CARD_FIELD_NUMBER: _ClassVar[int]
     payment_id: int
     amount: int
-    credit_card: int
-    def __init__(self, payment_id: _Optional[int] = ..., amount: _Optional[int] = ..., credit_card: _Optional[int] = ...) -> None: ...
+    credit_card: str
+    def __init__(self, payment_id: _Optional[int] = ..., amount: _Optional[int] = ..., credit_card: _Optional[str] = ...) -> None: ...
 
 class PaymentResponse(_message.Message):
     __slots__ = ("success",)
