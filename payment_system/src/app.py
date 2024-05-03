@@ -31,14 +31,14 @@ class PaymentSystem(payment_system_grpc.PaymentSystemServicer):
         if self.has_money(request.credit_card, request.amount):
             self.reserve_money(request.credit_card, request.amount)
             self.to_commit[request.payment_id] = (request.credit_card, request.amount)
-            print(f"Created reservation {request.payment_id} for card {request.credit_card} equal to {request.amount} money")
+            print(f"Created reservation with ID {request.payment_id} for card {request.credit_card} equal to {request.amount} money")
             return payment_system.PaymentResponse(success=True)
         print(f"Card {request.credit_card} did not have {request.amount} money, unable to create reservation")
         return payment_system.PaymentResponse(success=False)
     
     def ConfirmPayment(self, request, context):
         if request.payment_id not in self.to_commit.keys():
-            print(f"Never made reservation {request.payment_id}")
+            print(f"Never made reservation with ID {request.payment_id}, so rollback unnecessary")
             return payment_system.PaymentResponse(success=True)
         
         credit_card, amount = self.to_commit[request.payment_id]
@@ -48,18 +48,18 @@ class PaymentSystem(payment_system_grpc.PaymentSystemServicer):
             self.release_payment(credit_card, amount)
             
         del self.to_commit[request.payment_id]
-        print(f"Removed reservation {request.payment_id}")
+        print(f"Removed reservation of {amount} money with ID {request.payment_id} from card {credit_card}")
         
         return payment_system.PaymentResponse(success=True)
     
     def reserve_money(self, credit_card, amount):
-        print(f"Reserving {amount} on {credit_card}")
+        print(f"Reserving {amount} money on card {credit_card}")
     
     def make_payment(self, credit_card, amount):
-        print(f"Making payment of {amount} from {credit_card}")
+        print(f"Making payment of {amount} money from card {credit_card}")
         
     def release_payment(self, credit_card, amount):
-        print(f"Releasing payment of {amount} from {credit_card}")
+        print(f"Releasing payment of {amount} money from card {credit_card}")
     
     def has_money(self, credit_card, amount):
         return sum([int(x) for x in str(credit_card)]) > amount

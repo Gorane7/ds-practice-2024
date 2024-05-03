@@ -66,7 +66,10 @@ def pre_modify_db(book_id, delta, resp={}):
         # Create a stub object.
         stub = database_grpc.DatabaseStub(channel)
         # Call the service through the stub object.
-        print(f"Attempting to modify to db {db_id}")
+        if delta > 0:
+            print(f"Attempting to increment to db {db_id}")
+        else:
+            print(f"Attempting to decrement from db {db_id}")
         modify_id = int(time.time() * 1000)
         response = stub.Modify(database.ModifyRequest(field=book_id, value=delta, fresh=True, modify_id=modify_id))
         return response, modify_id
@@ -79,7 +82,10 @@ def commit_modify(success, modify_id):
         # Create a stub object.
         stub = database_grpc.DatabaseStub(channel)
         # Call the service through the stub object.
-        print(f"Attempting to commit to db {db_id} with status {success}")
+        if success:
+            print(f"Attempting to commit modification {modify_id} to db {db_id}")
+        else:
+            print(f"Attempting to roll back modification {modify_id} from db {db_id}")
         response = stub.ModifyCommit(database.ModifyCommitRequest(modify_id=modify_id, to_commit=success))
 
 
@@ -89,14 +95,17 @@ def pre_pay():
         credit_card = "1234123456785678"
         price = random.randint(10, 150)
         payment_id = int(time.time() * 1000)
-        print(f"Attempting pre pay {price} with {credit_card}")
+        print(f"Attempting to reserve {price} from card {credit_card}")
         response = stub.StartPayment(payment_system.PaymentRequest(payment_id=payment_id, amount=price, credit_card=credit_card))
         return response, payment_id
 
 def commit_payment(success, payment_id):
     with grpc.insecure_channel(f"payment_system:50055") as channel:
         stub = payment_system_grpc.PaymentSystemStub(channel)
-        print(f"Confirming payment {payment_id} with result {success}")
+        if success:
+            print(f"Confirming payment {payment_id}")
+        else:
+            print(f"Releasing payment {payment_id}")
         response = stub.ConfirmPayment(payment_system.PaymentConfirmation(payment_id=payment_id, perform_payment=success))
 
 
@@ -168,7 +177,7 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
         modify_ids = []
         for book in booknames:
             modify_response, modify_id = pre_modify_db(book, -1)
-            print(f"Did pre-modify for {book} with delta -1, modify response {modify_response.success} and modify id {modify_id}")
+            print(f"Attempted to decrement amount of '{book}'. Modify id was {modify_id} and outcome was {'SUCCESS' if modify_response.success else 'FAIL'}")
             success = success and modify_response.success
             modify_ids.append(modify_id)
         response, payment_id = pre_pay()
@@ -176,7 +185,10 @@ class OrderExecutor(order_executor_grpc.OrderExecutorServicer):
         
         for modify_id in modify_ids:
             commit_modify(success, modify_id)
-            print(f"Did commit with modify id {modify_id} and status {success}")
+            if success:
+                print(f"Committed modification {modify_id}")
+            else:
+                print(f"Rolled back modification {modify_id}")
         commit_payment(success, payment_id)
         
         print(f"Finished processing of {booknames}")
