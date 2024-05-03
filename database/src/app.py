@@ -51,6 +51,8 @@ class Database(database_grpc.DatabaseServicer):
                         stub.Release(request)
                     elif method == "modify":
                         stub.Modify(request)
+                    elif method == "modify-commit":
+                        stub.ModifyCommit(request)
                         
                     if success:
                         peers.remove(peer)
@@ -100,11 +102,13 @@ class Database(database_grpc.DatabaseServicer):
         if not request.fresh:
             self.db[field] += request.value
             self.modifications[request.modify_id] = (field, request.value)
-            print(f"Creating modification '{request.modify_id}'")
+            print(f"Creating modification '{request.modify_id}', there are now {self.db[field]} remaining '{field}'")
             return database.ModifyResponse(success=True)
 
         lock_id = int(time.time() * 1000)
         while True:
+            while field in self.lock:
+                time.sleep(0.01)
             self.lock[field] = lock_id
             print(f"Locked field '{field}' with lock ID: {lock_id} because of Modify")
             if self.propagate(database.LockRequest(field=field, lock_id=lock_id), "lock", crash_on_failure=True):
@@ -115,10 +119,17 @@ class Database(database_grpc.DatabaseServicer):
             print(f"Released field '{field}' from Modify")
             time.sleep(0.01)
 
+        request.fresh = False
+        if self.db[field] + request.value < 0:
+            print(f"Unable to decrement '{field}' by {-request.value} because there are only {self.db[field]} remaining")
+            self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
+            self.lock.pop(field)
+            print(f"Released field '{field}' from Modify")
+            return database.ModifyResponse(success=False)
+
         self.db[field] += request.value
         self.modifications[request.modify_id] = (field, request.value)
-        print(f"Creating modification '{request.modify_id}'")
-        request.fresh = False
+        print(f"Creating modification '{request.modify_id}', there are now {self.db[field]} remaining '{field}'")
         
         self.propagate(request, "modify")
         self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
@@ -133,24 +144,29 @@ class Database(database_grpc.DatabaseServicer):
                 print(f"Confirming modification '{request.modify_id}'")
                 del self.modifications[request.modify_id]
             else:
-                print(f"Rolling back '{request.modify_id}'")
                 field, value = self.modifications[request.modify_id]
                 self.db[field] -= value
+                print(f"Rolling back '{request.modify_id}', there are now {self.db[field]} remaining '{field}'")
                 del self.modifications[request.modify_id]
             return database.ModifyCommitResponse()
         
         if request.to_commit:
             print(f"Confirming modification '{request.modify_id}'")
             del self.modifications[request.modify_id]
-            self.propagate(database.ModifyCommitRequest(to_commit=True, modify_id=request.modify_id, fresh=False))
+            self.propagate(database.ModifyCommitRequest(to_commit=True, modify_id=request.modify_id, fresh=False), "modify-commit")
             return database.ModifyCommitResponse()
         
+        if request.modify_id not in self.modifications:
+            print(f"Never made modifiation {request.modify_id}, so no need to roll back")
+            return database.ModifyCommitResponse()
         field, value = self.modifications[request.modify_id]
         lock_id = int(time.time() * 1000)
         while True:
+            while field in self.lock:
+                time.sleep(0.01)
             self.lock[field] = lock_id
             print(f"Locked field '{field}' with lock ID: {lock_id} because of ModifyCommit rollback")
-            if self.propagate(database.LockRequest(field=field, lock_id=lock_id), "modify-commit", crash_on_failure=True):
+            if self.propagate(database.LockRequest(field=field, lock_id=lock_id), "lock", crash_on_failure=True):
                 break
             
             self.propagate(database.ReleaseRequest(field=field, lock_id=lock_id), "release")
@@ -160,7 +176,7 @@ class Database(database_grpc.DatabaseServicer):
         
         self.db[field] -= value
         del self.modifications[request.modify_id]
-        print(f"Rolling back '{request.modify_id}'")
+        print(f"Rolling back '{request.modify_id}', there are now {self.db[field]} remaining '{field}'")
         request.fresh = False
         
         self.propagate(request, "modify-commit")
@@ -168,7 +184,7 @@ class Database(database_grpc.DatabaseServicer):
         
         self.lock.pop(field)
         print(f"Released field '{field}' from ModifyCommit")
-        return database.ModifyCommitResponse(success=True)
+        return database.ModifyCommitResponse()
 
     def Lock(self, request, context):
         field = request.field

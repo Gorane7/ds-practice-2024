@@ -86,7 +86,7 @@ def commit_modify(success, modify_id):
             print(f"Attempting to commit modification {modify_id} to db {db_id}")
         else:
             print(f"Attempting to roll back modification {modify_id} from db {db_id}")
-        response = stub.ModifyCommit(database.ModifyCommitRequest(modify_id=modify_id, to_commit=success))
+        response = stub.ModifyCommit(database.ModifyCommitRequest(modify_id=modify_id, to_commit=success, fresh=True))
 
 
 def pre_pay():
