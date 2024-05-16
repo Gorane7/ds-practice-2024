@@ -210,19 +210,21 @@ def checkout():
         
         responses = {}
 
-        fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "req":request.json, "resp": responses, "order_id":order_id})
-        verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses, "order_id":order_id})
-        suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses, "order_id":order_id})
-        fraud_thread.start()
-        verif_thread.start()
-        suggestion_thread.start()
-        fraud_thread.join()
-        verif_thread.join()
-        suggestion_thread.join()        
+    
+    fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "req":request.json, "resp": responses, "order_id":order_id})
+    verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses, "order_id":order_id})
+    suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses, "order_id":order_id})
+    fraud_thread.start()
+    verif_thread.start()
+    suggestion_thread.start()
+    fraud_thread.join()
+    verif_thread.join()
+    suggestion_thread.join()
+    
 
-        decision = responses["fraud"]
-        trans_verif = responses["verif"]
-        suggestions = responses["suggestions"]
+    decision = responses["fraud"]
+    trans_verif = responses["verif"]
+    suggestions = responses["suggestions"]
 
         print(f"Fraud decision: {decision}")
         print(f"Transaction verification: {trans_verif}")

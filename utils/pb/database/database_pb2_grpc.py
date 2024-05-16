@@ -44,6 +44,11 @@ class DatabaseStub(object):
                 request_serializer=database__pb2.ReleaseRequest.SerializeToString,
                 response_deserializer=database__pb2.ReleaseResponse.FromString,
                 )
+        self.OverwriteDB = channel.unary_unary(
+                '/hello.Database/OverwriteDB',
+                request_serializer=database__pb2.OverwriteDBRequest.SerializeToString,
+                response_deserializer=database__pb2.OverwriteDBResponse.FromString,
+                )
 
 
 class DatabaseServicer(object):
@@ -85,6 +90,12 @@ class DatabaseServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def OverwriteDB(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DatabaseServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -117,6 +128,11 @@ def add_DatabaseServicer_to_server(servicer, server):
                     servicer.Release,
                     request_deserializer=database__pb2.ReleaseRequest.FromString,
                     response_serializer=database__pb2.ReleaseResponse.SerializeToString,
+            ),
+            'OverwriteDB': grpc.unary_unary_rpc_method_handler(
+                    servicer.OverwriteDB,
+                    request_deserializer=database__pb2.OverwriteDBRequest.FromString,
+                    response_serializer=database__pb2.OverwriteDBResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -227,5 +243,22 @@ class Database(object):
         return grpc.experimental.unary_unary(request, target, '/hello.Database/Release',
             database__pb2.ReleaseRequest.SerializeToString,
             database__pb2.ReleaseResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def OverwriteDB(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/hello.Database/OverwriteDB',
+            database__pb2.OverwriteDBRequest.SerializeToString,
+            database__pb2.OverwriteDBResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

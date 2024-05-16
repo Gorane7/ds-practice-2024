@@ -102,6 +102,7 @@ class HelloService(fraud_detection_grpc.HelloServiceServicer):
             print(f"Found fraudulent behaviour")
         print(f"Time taken to detect fraudulent behaviour: {round(time.time()-start, 4)}")
         self.vector_clock[order_id][1]+=1
+        print("vector clock: ",self.vector_clock[order_id])
         self.response[order_id] = response
         '''
         with grpc.insecure_channel('fraud_detection:50051') as channel:

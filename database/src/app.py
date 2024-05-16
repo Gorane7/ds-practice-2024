@@ -205,6 +205,12 @@ class Database(database_grpc.DatabaseServicer):
             self.lock.pop(request.field)
             print(f"Released field '{request.field}' from Release")
         return database.ReleaseResponse()
+    
+    def OverwriteDB(self, request, context):
+        self.db = {}
+        for v in request.fields:
+            self.db[v.book_name] = v.amount
+        return database.OverwriteDBResponse()
 
 
 

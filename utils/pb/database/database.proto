@@ -9,6 +9,19 @@ service Database {
     rpc ModifyCommit (ModifyCommitRequest) returns (ModifyCommitResponse);
     rpc Lock (LockRequest) returns (LockResponse);
     rpc Release (ReleaseRequest) returns (ReleaseResponse);
+    rpc OverwriteDB (OverwriteDBRequest) returns (OverwriteDBResponse);
+}
+
+message OverwriteDBRequest {
+    repeated Field fields = 1;
+}
+
+message Field {
+    string book_name = 1;
+    int64 amount = 2;
+}
+
+message OverwriteDBResponse {
 }
 
 message ReadRequest {

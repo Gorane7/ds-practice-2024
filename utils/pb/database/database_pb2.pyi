@@ -1,8 +1,27 @@
+from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Optional as _Optional
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
+
+class OverwriteDBRequest(_message.Message):
+    __slots__ = ("fields",)
+    FIELDS_FIELD_NUMBER: _ClassVar[int]
+    fields: _containers.RepeatedCompositeFieldContainer[Field]
+    def __init__(self, fields: _Optional[_Iterable[_Union[Field, _Mapping]]] = ...) -> None: ...
+
+class Field(_message.Message):
+    __slots__ = ("book_name", "amount")
+    BOOK_NAME_FIELD_NUMBER: _ClassVar[int]
+    AMOUNT_FIELD_NUMBER: _ClassVar[int]
+    book_name: str
+    amount: int
+    def __init__(self, book_name: _Optional[str] = ..., amount: _Optional[int] = ...) -> None: ...
+
+class OverwriteDBResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
 
 class ReadRequest(_message.Message):
     __slots__ = ("field",)
