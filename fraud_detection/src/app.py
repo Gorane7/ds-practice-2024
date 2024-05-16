@@ -4,6 +4,13 @@ import time
 import threading
 from collections import defaultdict
 
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry import metrics
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
@@ -27,6 +34,16 @@ import transaction_verification_pb2_grpc as transaction_verification_grpc
 
 import grpc
 from concurrent import futures
+
+resource = Resource(attributes={
+    SERVICE_NAME: "fraud_detection"
+})
+
+metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter("http://observability:4318/v1/metrics"))
+meter_provider = MeterProvider(metric_readers=[metric_reader], resource=resource)
+metrics.set_meter_provider(meter_provider)
+meter = metrics.get_meter("fraud.detection.meter")
+fraud_counter = meter.create_counter("fraud.counter", unit="1", description="Counts the number of fraudulent credit cards detected")
 
 # Create a class to define the server functions, derived from
 # fraud_detection_pb2_grpc.HelloServiceServicer
@@ -81,6 +98,7 @@ class HelloService(fraud_detection_grpc.HelloServiceServicer):
         response = fraud_detection.FraudResponse()
         response.decision = "thief" in request.name
         if response.decision:
+            fraud_counter.add(1)
             print(f"Found fraudulent behaviour")
         print(f"Time taken to detect fraudulent behaviour: {round(time.time()-start, 4)}")
         self.vector_clock[order_id][1]+=1
@@ -103,6 +121,7 @@ class HelloService(fraud_detection_grpc.HelloServiceServicer):
         response = fraud_detection.FraudResponse()
         response.decision = "666" in request.creditInfo.number
         if response.decision:
+            fraud_counter.add(1)
             print(f"Found fraudulent behaviour")
         print(f"Time taken to detect fraudulent behaviour: {round(time.time()-start, 4)}")
         self.vector_clock[order_id][1]+=2

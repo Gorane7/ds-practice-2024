@@ -27,6 +27,30 @@ import grpc
 from concurrent import futures
 
 
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry import metrics
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+
+resource = Resource(attributes={
+    SERVICE_NAME: "suggestion_service"
+})
+
+metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter("http://observability:4318/v1/metrics"))
+provider = MeterProvider(metric_readers=[metric_reader], resource=resource)
+metrics.set_meter_provider(provider)
+meter = metrics.get_meter("suggestion.service.meter")
+suggestion_counter = meter.create_counter("suggestion.counter", unit="1", description="Counts the number of suggestions that have been made")
+
+
+suggestion_duration = meter.create_histogram(
+    name="suggestion.duration",
+    description="Measures the time it took to generate a suggestion",
+    unit="ms")
+
+
 word_vectors = api.load("word2vec-google-news-300")
 
 def calculate_similarity(book, other_book):
@@ -72,10 +96,10 @@ class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
             if self.die[request.order_id]:
                 return
         # Do something useful
-        response =  suggestions_service.SuggestionResponse()
+        response = suggestions_service.SuggestionResponse()
         print(f"Time taken to verify book: {round(time.time()-start,4)}")
         self.response[order_id] = response
-        self.vector_clock[order_id][2]+=2
+        self.vector_clock[order_id][2] += 2
         with grpc.insecure_channel('fraud_detection:50051') as channel:
             stub = fraud_detection_grpc.HelloServiceStub(channel)
             vec_clock_msg = fraud_detection.VectorClockInp_fraud()
@@ -99,8 +123,10 @@ class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
                 if other_book == ordered_book:
                     continue
                 suggested_books.append(request.books[book_pool.index(other_book)])
+                suggestion_counter.add(1)
                 print(f"User ordered {ordered_book}, so suggesting {other_book}")
-                break
+                if similarity < 0.01:
+                    break
         response = suggestions_service.SuggestionResponse(books = suggested_books)
 
         if len(request.books) == 0:
@@ -111,7 +137,10 @@ class SuggestionsService(suggestions_service_grpc.SuggestionsServiceServicer):
 
         print(f"Books that were ordered by the user: {request.ordered}")
         print(f"Book chosen to suggest: {book.title}")
-        print(f"Time taken to choose books: {round(time.time()-start,4)}")
+        time_taken = time.time() - start
+        suggestion_duration.record(time_taken)
+        print(f"Time taken to choose books: {round(time_taken, 4)}")
+        
         self.response[order_id] = response
     
     def Kill(self, request, context):

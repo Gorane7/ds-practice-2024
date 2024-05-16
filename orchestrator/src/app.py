@@ -4,6 +4,22 @@ import threading
 import time
 import random
 
+from tcp_latency import measure_latency
+
+
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+from opentelemetry import metrics
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.metrics import Observation
+
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
 # Change these lines only if strictly needed.
@@ -113,6 +129,51 @@ app = Flask(__name__)
 # Enable CORS for the app.
 CORS(app)
 
+resource = Resource(attributes={
+    SERVICE_NAME: "orchestrator"
+})
+
+provider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="http://observability:4318/v1/traces"))
+provider.add_span_processor(processor)
+trace.set_tracer_provider(provider)
+
+# Creates a tracer from the global tracer provider
+tracer = trace.get_tracer("checkout.tracer")
+
+
+metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter("http://observability:4318/v1/metrics"))
+meter_provider = MeterProvider(metric_readers=[metric_reader], resource=resource)
+metrics.set_meter_provider(meter_provider)
+meter = metrics.get_meter("orchestrator.requests.meter")
+
+active_request_counter = meter.create_up_down_counter(name="active.requests.counter", description="The number of active requests")
+
+
+request_duration = meter.create_histogram(
+    name="orchestrator.request.duration",
+    description="Measures the duration of the request",
+    unit="ms")
+
+global last_request_time
+last_request_time = time.time()
+
+def latency_test(arg):
+    target = "neti.ee"
+    val = measure_latency(host=target)[0]
+    print(f"Latency to '{target}' was {round(val, 2)} ms")
+    yield Observation(val, {})
+
+def time_since_last_request(arg):
+    global last_request_time
+    time_since = time.time() - last_request_time
+    print(f"Time since last request is {round(time_since, 2)} s")
+    yield Observation(time_since, {})
+
+meter.create_observable_gauge("network.latency", [latency_test])
+meter.create_observable_gauge("orchestrator.time.since.last.request", [time_since_last_request])
+
+
 # Define a GET endpoint.
 @app.route('/', methods=['GET'])
 def index():
@@ -129,52 +190,62 @@ def checkout():
     """
     Responds with a JSON object containing the order ID, status, and suggested books.
     """
-    # Print request object data
-    order_id = int(random.random()*8008135420)
-    print("Request Data:", request.json)
+    global last_request_time
+    start = time.time()
+    last_request_time = start
+    active_request_counter.add(1)
+    with tracer.start_as_current_span("checkout-span") as span:
+        # Print request object data
+        order_id = int(random.random()*8008135420)
+        span.set_attribute("checkout.order_id", order_id)
+        print("Request Data:", request.json)
 
-    pool=[
-            {'bookId': '1', 'title': 'Learning Python', 'author': 'John Smith'},
-            {'bookId': '2', 'title': 'JavaScript - The Good Parts', 'author': 'Jane Doe'},
-            {'bookId': '3', 'title': 'Domain-Driven Design: Tackling Complexity in the Heart of Software', 'author': 'Eric Evans'},
-            {'bookId': '4', 'title': 'Design Patterns: Elements of Reusable Object-Oriented Software', 'author': 'Erich Gamma, Richard Helm, Ralph Johnson, & John Vlissides'}
-        ]
-    book_names = [x["name"] for x in request.json["items"]]
-    
-    responses = {}
+        pool=[
+                {'bookId': '1', 'title': 'Learning Python', 'author': 'John Smith'},
+                {'bookId': '2', 'title': 'JavaScript - The Good Parts', 'author': 'Jane Doe'},
+                {'bookId': '3', 'title': 'Domain-Driven Design: Tackling Complexity in the Heart of Software', 'author': 'Eric Evans'},
+                {'bookId': '4', 'title': 'Design Patterns: Elements of Reusable Object-Oriented Software', 'author': 'Erich Gamma, Richard Helm, Ralph Johnson, & John Vlissides'}
+            ]
+        book_names = [x["name"] for x in request.json["items"]]
+        
+        responses = {}
 
-    '''
-    fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "req":request.json, "resp": responses, "order_id":order_id})
-    verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses, "order_id":order_id})
-    suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses, "order_id":order_id})
-    fraud_thread.start()
-    verif_thread.start()
-    suggestion_thread.start()
-    fraud_thread.join()
-    verif_thread.join()
-    suggestion_thread.join()
-    '''
+        fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "req":request.json, "resp": responses, "order_id":order_id})
+        verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses, "order_id":order_id})
+        suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses, "order_id":order_id})
+        fraud_thread.start()
+        verif_thread.start()
+        suggestion_thread.start()
+        fraud_thread.join()
+        verif_thread.join()
+        suggestion_thread.join()        
 
-    decision = 0      # responses["fraud"]
-    trans_verif = 0   # responses["verif"]
-    suggestions = ""  # responses["suggestions"]
+        decision = responses["fraud"]
+        trans_verif = responses["verif"]
+        suggestions = responses["suggestions"]
 
-    print(f"Fraud decision: {decision}")
-    print(f"Transaction verification: {trans_verif}")
+        print(f"Fraud decision: {decision}")
+        print(f"Transaction verification: {trans_verif}")
+        
+        span.set_attribute("checkout.fraud_decision", decision)
+        span.set_attribute("checkout.transaction_verification", trans_verif)
+        span.set_attribute("checkout.book_suggestions", suggestions)
 
-    if not decision and not trans_verif:
-        enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})
-        enqueue_thread.start()
-        enqueue_thread.join()
+        if not decision and not trans_verif:
+            enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})
+            enqueue_thread.start()
+            enqueue_thread.join()
 
-    # Dummy response following the provided YAML specification for the bookstore
-    order_status_response = {
-        'orderId': order_id,
-        'status': 'Fraud detected' if decision else ("Incorrect transaction details (credit card number, name etc)" if trans_verif else "Order accepted"),
-        'suggestedBooks': suggestions
-    }
+        # Dummy response following the provided YAML specification for the bookstore
+        order_status_response = {
+            'orderId': order_id,
+            'status': 'Fraud detected' if decision else ("Incorrect transaction details (credit card number, name etc)" if trans_verif else "Order accepted"),
+            'suggestedBooks': suggestions
+        }
 
-    return order_status_response
+        active_request_counter.add(-1)
+        request_duration.record(1000 * (time.time() - start))
+        return order_status_response
 
 
 if __name__ == '__main__':
