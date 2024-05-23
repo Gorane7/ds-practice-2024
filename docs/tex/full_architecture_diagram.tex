@@ -43,15 +43,21 @@
 \noindent%
 
 
-\section {Architecture diagram}
+\section {Full architecture diagram}
 \begin{tikzpicture}
+
+
+\newcommand\gX{2};
+\newcommand\gY{-15};
+\newcommand\gR{4};
+
 
 % Frontend
 \node [draw,
 	minimum width=2cm,
 	text width=2cm,
 	very thick,
-]  (frontend) at (0, 0) {
+]  (frontend) at (9, -18.3) {
 Frontend\\
 :8080
 };
@@ -61,7 +67,7 @@ Frontend\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-]  (orchestrator) at (0, -2) {
+]  (orchestrator) at (\gX + 0.588 * \gR, \gY - 0.809 * \gR) {
 Orchestrator\\
 :8081
 };
@@ -71,7 +77,7 @@ Orchestrator\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-]  (fraud_detection) at (4, 0) {
+]  (fraud_detection) at (\gX - 0.951 * \gR, \gY + 0.309 * \gR) {
 Fraud\\detection\\
 :50051
 };
@@ -81,7 +87,7 @@ Fraud\\detection\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-]  (transaction_verification) at (4, -2) {
+]  (transaction_verification) at (\gX - 0.588 * \gR, \gY - 0.809 * \gR) {
 Transaction\\verification\\
 :50052
 };
@@ -91,7 +97,7 @@ Transaction\\verification\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (suggestions_service) at (4, -4) {
+] (suggestions_service) at (\gX + 0.951 * \gR, \gY + 0.309 * \gR) {
 Suggestion\\service\\
 :50053
 };
@@ -101,17 +107,23 @@ Suggestion\\service\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (order_queue) at (4, -6) {
+] (order_queue) at (9, -13) {
 Order\\queue\\
 :50054
 };
+
+% Order executors
+\newcommand\execX{8};
+\newcommand\execY{-7.3};
+\newcommand\execR{2.5};
+\node[draw, circle, minimum size=7.5cm] (order_executors)   at (\execX, \execY) {};
 
 % Order executor 0
 \node [draw,
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (order_executor_0) at (8, -2) {
+] (order_executor_0) at (\execX + 0 * \execR, \execY + 1 * \execR) {
 Order\\executor 0\\
 :50100
 };
@@ -121,7 +133,7 @@ Order\\executor 0\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (order_executor_1) at (8, -4) {
+] (order_executor_1) at (\execX + 0.951 * \execR, \execY + 0.309 * \execR) {
 Order\\executor 1\\
 :50101
 };
@@ -131,7 +143,7 @@ Order\\executor 1\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (order_executor_2) at (8, -6) {
+] (order_executor_2) at (\execX + 0.588 * \execR, \execY - 0.809 * \execR) {
 Order\\executor 2\\
 :50102
 };
@@ -141,7 +153,7 @@ Order\\executor 2\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (order_executor_3) at (8, -8) {
+] (order_executor_3) at (\execX - 0.588 * \execR, \execY - 0.809 * \execR) {
 Order\\executor 3\\
 :50103
 };
@@ -151,37 +163,37 @@ Order\\executor 3\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (order_executor_4) at (8, -10) {
+] (order_executor_4) at (\execX - 0.951 * \execR, \execY + 0.309 * \execR) {
 Order\\executor 4\\
 :50104
 };
 
+% Databases
+\node[draw, circle, minimum size=5.8cm] (databases)   at (-0.68, -7) {};
 % Database 0
 \node [draw,
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (database_0) at (0, -6) {
+] (database_0) at (-2, -6) {
 Database 0\\
 :50105
 };
-
 % Database 1
 \node [draw,
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (database_1) at (0, -8) {
+] (database_1) at (-2, -8) {
 Database 1\\
 :50106
 };
-
 % Database 2
 \node [draw,
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (database_2) at (0, -10) {
+] (database_2) at (1, -7) {
 Database 2\\
 :50107
 };
@@ -191,7 +203,7 @@ Database 2\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (payment_system) at (4, -8) {
+] (payment_system) at (12.5, -12) {
 Payment\\system\\
 :50055
 };
@@ -201,7 +213,7 @@ Payment\\system\\
 	minimum width=2cm,
 	text width=2cm,
 	very thick
-] (grafana_ui) at (4, -12) {
+] (grafana_ui) at (-2.5, -11) {
 Grafana UI\\
 :3000
 };
@@ -211,7 +223,7 @@ Grafana UI\\
 	minimum width=2cm,
 	text width=2.2cm,
 	very thick
-] (opentelemetry_backend) at (4, -14) {
+] (opentelemetry_backend) at (\gX + 0 * \gR, \gY + 1 * \gR) {
 OpenTelemetry\\backend\\
 :4318
 };
@@ -220,10 +232,46 @@ OpenTelemetry\\backend\\
 
 % Arrows with text label
 
-%\draw[thick] (frontend) -- (orchestrator) node[midway, right] {HTTP};
-%\draw[thick] (orchestrator.east) -- (fraud_detection.west) node[midway, above] {RPC};
+
+
 %\draw[thick] (orchestrator.east) -- (transaction_verification.west) node[midway, above] {RPC};
 %\draw[thick] (orchestrator.east) -- (suggestions_service.west) node[midway, above] {RPC};
+
+\draw[thick] (database_0) -- (database_1) node[midway, left] {gRPC};
+\draw[thick] (database_0) -- (database_2) node[midway, above] {gRPC};
+\draw[thick] (database_1) -- (database_2) node[midway, below] {gRPC};
+
+\draw[thick] (fraud_detection) -- (opentelemetry_backend) node[midway, left] {HTTP};
+\draw[thick] (fraud_detection) -- (transaction_verification) node[midway, left] {gRPC};
+
+\draw[thick] (frontend) -- (orchestrator) node[midway, above] {HTTP};
+
+\draw[thick] (orchestrator) -- (fraud_detection) node[pos=0.25, left] {gRPC};
+\draw[thick] (orchestrator) -- (transaction_verification) node[midway, below] {gRPC};
+\draw[thick] (orchestrator) -- (suggestions_service) node[midway, right] {gRPC};
+\draw[thick] (orchestrator) -- (order_queue) node[midway, right] {gRPC};
+\draw[thick] (orchestrator) -- (opentelemetry_backend) node[pos=0.8, right] {HTTP};
+
+\draw[thick] (order_executor_0) -- (order_executor_1) node[midway, right] {gRPC};
+\draw[thick] (order_executor_1) -- (order_executor_2) node[midway, right] {gRPC};
+\draw[thick] (order_executor_2) -- (order_executor_3) node[midway, below] {gRPC};
+\draw[thick] (order_executor_3) -- (order_executor_4) node[midway, left] {gRPC};
+\draw[thick] (order_executor_4) -- (order_executor_0) node[midway, left] {gRPC};
+
+\draw[thick] (order_executors) -- (order_queue) node[midway, right] {gRPC};
+\draw[thick] (order_executors) -- (databases) node[midway, above] {gRPC};
+\draw[thick] (order_executors) -- (payment_system) node[midway, right] {gRPC};
+
+\draw[thick] (order_queue) -- (opentelemetry_backend) node[midway, above] {HTTP};
+
+\draw[thick] (suggestions_service) -- (opentelemetry_backend) node[midway, right] {HTTP};
+\draw[thick] (suggestions_service) -- (fraud_detection) node[midway, below] {gRPC};
+
+
+\draw[thick] (transaction_verification) -- (opentelemetry_backend) node[pos=0.8, left] {HTTP};
+\draw[thick] (transaction_verification) -- (suggestions_service) node[pos=0.47, left] {gRPC};
+
+\draw[thick] (grafana_ui) -- (opentelemetry_backend) node[midway, above] {Unknown};
 
 \end{tikzpicture}
 
