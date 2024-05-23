@@ -1,2 +1,4 @@
 utils/venv/
 .diagram.tex.swp
+utils/pb/database/__pycache__/
+*~
