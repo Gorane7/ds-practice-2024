@@ -198,7 +198,7 @@ def checkout():
         # Print request object data
         order_id = int(random.random()*8008135420)
         span.set_attribute("checkout.order_id", order_id)
-        print("Request Data:", request.json)
+        print(f"Order ID {order_id} has request Data:", request.json)
 
         pool=[
                 {'bookId': '1', 'title': 'Learning Python', 'author': 'John Smith'},
@@ -226,28 +226,28 @@ def checkout():
     trans_verif = responses["verif"]
     suggestions = responses["suggestions"]
 
-        print(f"Fraud decision: {decision}")
-        print(f"Transaction verification: {trans_verif}")
-        
-        span.set_attribute("checkout.fraud_decision", decision)
-        span.set_attribute("checkout.transaction_verification", trans_verif)
-        span.set_attribute("checkout.book_suggestions", suggestions)
+    print(f"Fraud decision: {decision}")
+    print(f"Transaction verification: {trans_verif}")
+    
+    span.set_attribute("checkout.fraud_decision", decision)
+    span.set_attribute("checkout.transaction_verification", trans_verif)
+    span.set_attribute("checkout.book_suggestions", suggestions)
 
-        if not decision and not trans_verif:
-            enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})
-            enqueue_thread.start()
-            enqueue_thread.join()
+    if not decision and not trans_verif:
+        enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})
+        enqueue_thread.start()
+        enqueue_thread.join()
 
-        # Dummy response following the provided YAML specification for the bookstore
-        order_status_response = {
-            'orderId': order_id,
-            'status': 'Fraud detected' if decision else ("Incorrect transaction details (credit card number, name etc)" if trans_verif else "Order accepted"),
-            'suggestedBooks': suggestions
-        }
+    # Dummy response following the provided YAML specification for the bookstore
+    order_status_response = {
+        'orderId': order_id,
+        'status': 'Fraud detected' if decision else ("Incorrect transaction details (credit card number, name etc)" if trans_verif else "Order accepted"),
+        'suggestedBooks': suggestions
+    }
 
-        active_request_counter.add(-1)
-        request_duration.record(1000 * (time.time() - start))
-        return order_status_response
+    active_request_counter.add(-1)
+    request_duration.record(1000 * (time.time() - start))
+    return order_status_response
 
 
 if __name__ == '__main__':

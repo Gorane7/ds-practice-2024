@@ -68,7 +68,7 @@ test4 () {
 	fails=0
 	for i in $(seq 0 7); do
 		r=0
-		if [ $(echo $r % 2 | bc) -eq 0 ]; then
+		if [ $(echo $i % 2 | bc) -eq 0 ]; then
 			test1 &
 		else
 			test2 &
