@@ -160,7 +160,10 @@ last_request_time = time.time()
 
 def latency_test(arg):
     target = "neti.ee"
-    val = measure_latency(host=target)[0]
+    try:
+        val = measure_latency(host=target)[0]
+    except:
+        val = 10000
     print(f"Latency to '{target}' was {round(val, 2)} ms")
     yield Observation(val, {})
 
