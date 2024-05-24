@@ -64,25 +64,30 @@ test3 () {
 }
 
 test4 () {
-	echo "Running test 4: Running 100 instaces of mixed fraudulent and non-fraudulent requests in rapid succession"
+	echo "Running test 4: Running 7 instaces of mixed fraudulent and non-fraudulent requests in rapid succession with overlaps"
 	fails=0
-	for i in $(seq 0 7); do
+	for i in $(seq 0 6); do
 		r=0
 		if [ $(echo $i % 2 | bc) -eq 0 ]; then
-			test1 &
+			test1 &>/dev/null &
 		else
-			test2 &
+			test2 &>/dev/null &
 		fi
 	done
 	wait
-	echo "$fails orders failed out of 100"
+	if [[ $fails == 0 ]]; then
+		echo -en "\033[0;32m"
+	else
+		echo -en "\033[0;31m"
+	fi
+	echo -e "$fails orders failed out of 7\033[0m"
 }
 
 TIMEFORMAT="Time taken: %3R"
-#time test1
+time test1
 echo
-#time test2
+time test2
 echo
-#time test3
+time test3
 echo
 time test4
