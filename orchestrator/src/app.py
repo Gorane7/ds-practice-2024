@@ -190,68 +190,70 @@ def index():
 
 @app.route('/checkout', methods=['POST'])
 def checkout():
-    """
-    Responds with a JSON object containing the order ID, status, and suggested books.
-    """
-    global last_request_time
-    start = time.time()
-    last_request_time = start
-    active_request_counter.add(1)
-    with tracer.start_as_current_span("checkout-span") as span:
-        # Print request object data
-        order_id = int(random.random()*8008135420)
-        span.set_attribute("checkout.order_id", order_id)
-        print(f"Order ID {order_id} has request Data:", request.json)
+    try:
+        """
+        Responds with a JSON object containing the order ID, status, and suggested books.
+        """
+        global last_request_time
+        start = time.time()
+        last_request_time = start
+        active_request_counter.add(1)
+        with tracer.start_as_current_span("checkout-span") as span:
+            # Print request object data
+            order_id = int(random.random()*8008135420)
+            span.set_attribute("checkout.order_id", order_id)
+            print(f"Order ID {order_id} has request Data:", request.json)
 
-        pool=[
-                {'bookId': '1', 'title': 'Learning Python', 'author': 'John Smith'},
-                {'bookId': '2', 'title': 'JavaScript - The Good Parts', 'author': 'Jane Doe'},
-                {'bookId': '3', 'title': 'Domain-Driven Design: Tackling Complexity in the Heart of Software', 'author': 'Eric Evans'},
-                {'bookId': '4', 'title': 'Design Patterns: Elements of Reusable Object-Oriented Software', 'author': 'Erich Gamma, Richard Helm, Ralph Johnson, & John Vlissides'}
-            ]
-        book_names = [x["name"] for x in request.json["items"]]
+            pool=[
+                    {'bookId': '1', 'title': 'Learning Python', 'author': 'John Smith'},
+                    {'bookId': '2', 'title': 'JavaScript - The Good Parts', 'author': 'Jane Doe'},
+                    {'bookId': '3', 'title': 'Domain-Driven Design: Tackling Complexity in the Heart of Software', 'author': 'Eric Evans'},
+                    {'bookId': '4', 'title': 'Design Patterns: Elements of Reusable Object-Oriented Software', 'author': 'Erich Gamma, Richard Helm, Ralph Johnson, & John Vlissides'}
+                ]
+            book_names = [x["name"] for x in request.json["items"]]
+            
+            responses = {}
+
         
-        responses = {}
+        fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "req":request.json, "resp": responses, "order_id":order_id})
+        verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses, "order_id":order_id})
+        suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses, "order_id":order_id})
+        fraud_thread.start()
+        verif_thread.start()
+        suggestion_thread.start()
+        fraud_thread.join()
+        verif_thread.join()
+        suggestion_thread.join()
+        
 
-    
-    fraud_thread = threading.Thread(target=detect_fraud, kwargs={"name":request.json["user"]["name"], "req":request.json, "resp": responses, "order_id":order_id})
-    verif_thread = threading.Thread(target=verify_transaction, kwargs={"req":request.json, "resp": responses, "order_id":order_id})
-    suggestion_thread = threading.Thread(target=suggest_service, kwargs={"pool":pool, "ordered_books":book_names, "resp": responses, "order_id":order_id})
-    fraud_thread.start()
-    verif_thread.start()
-    suggestion_thread.start()
-    fraud_thread.join()
-    verif_thread.join()
-    suggestion_thread.join()
-    
+        decision = responses["fraud"]
+        trans_verif = responses["verif"]
+        suggestions = responses["suggestions"]
 
-    decision = responses["fraud"]
-    trans_verif = responses["verif"]
-    suggestions = responses["suggestions"]
+        print(f"Fraud decision: {decision}")
+        print(f"Transaction verification: {trans_verif}")
+        
+        span.set_attribute("checkout.fraud_decision", decision)
+        span.set_attribute("checkout.transaction_verification", trans_verif)
+        span.set_attribute("checkout.book_suggestions", suggestions)
 
-    print(f"Fraud decision: {decision}")
-    print(f"Transaction verification: {trans_verif}")
-    
-    span.set_attribute("checkout.fraud_decision", decision)
-    span.set_attribute("checkout.transaction_verification", trans_verif)
-    span.set_attribute("checkout.book_suggestions", suggestions)
+        if not decision and not trans_verif:
+            enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})
+            enqueue_thread.start()
+            enqueue_thread.join()
 
-    if not decision and not trans_verif:
-        enqueue_thread = threading.Thread(target=enqueue_order, kwargs={"books": book_names, "resp": responses})
-        enqueue_thread.start()
-        enqueue_thread.join()
+        # Dummy response following the provided YAML specification for the bookstore
+        order_status_response = {
+            'orderId': order_id,
+            'status': 'Fraud detected' if decision else ("Incorrect transaction details (credit card number, name etc)" if trans_verif else "Order accepted"),
+            'suggestedBooks': suggestions
+        }
 
-    # Dummy response following the provided YAML specification for the bookstore
-    order_status_response = {
-        'orderId': order_id,
-        'status': 'Fraud detected' if decision else ("Incorrect transaction details (credit card number, name etc)" if trans_verif else "Order accepted"),
-        'suggestedBooks': suggestions
-    }
-
-    active_request_counter.add(-1)
-    request_duration.record(1000 * (time.time() - start))
-    return order_status_response
-
+        active_request_counter.add(-1)
+        request_duration.record(1000 * (time.time() - start))
+        return order_status_response
+    except:
+        return ("Malformed request",400)
 
 if __name__ == '__main__':
     # Run the app in debug mode to enable hot reloading.
